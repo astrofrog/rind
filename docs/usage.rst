@@ -3,6 +3,16 @@ Usage Guide
 
 This guide walks through setting up a meta-package for an existing project.
 
+Prerequisites
+-------------
+
+rind uses `setuptools_scm <https://github.com/pypa/setuptools_scm>`_ to
+determine the package version from git tags. **Your core package must also use
+setuptools_scm** for version pinning to work correctly.
+
+Both packages will get their version from the same git tag, ensuring that
+``mypackage==1.2.3`` always installs ``mypackage-core==1.2.3``.
+
 Repository Structure
 --------------------
 
@@ -18,18 +28,25 @@ A typical setup has the meta-package configuration in a ``meta/`` subdirectory:
    └── meta/
        └── pyproject.toml      # Meta-package (mypackage)
 
-Step 1: Rename the Core Package
--------------------------------
+Step 1: Configure the Core Package
+----------------------------------
 
-In your root ``pyproject.toml``, change the package name to include ``-core``:
+In your root ``pyproject.toml``, change the package name to include ``-core``
+and configure setuptools_scm for versioning:
 
 .. code-block:: toml
 
    [project]
    name = "mypackage-core"  # Was: "mypackage"
-   version = "1.0.0"
+   dynamic = ["version"]
    description = "My package (core)"
    # ... rest of metadata
+
+   [build-system]
+   requires = ["setuptools>=61", "setuptools_scm>=8"]
+   build-backend = "setuptools.build_meta"
+
+   [tool.setuptools_scm]
 
 Organize dependencies into the minimal required set plus optional extras:
 
@@ -159,7 +176,7 @@ Here's an example GitHub Actions workflow for releasing both packages:
        steps:
          - uses: actions/checkout@v4
            with:
-             fetch-depth: 0  # Needed for setuptools_scm
+             fetch-depth: 0  # Required for setuptools_scm
 
          - uses: actions/setup-python@v5
            with:

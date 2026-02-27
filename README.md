@@ -14,16 +14,18 @@ Package maintainers often face a tension between two types of users:
 
 Putting recommended dependencies behind extras places a burden on typical users to discover and use special syntax. But making them required penalizes advanced users who need lean installations.
 
-**rind solves this** by letting you publish two packages from a single repository:
+One solution is to distribute two packages: a core package with minimal dependencies (e.g., `mypackage-core`) and a meta-package (e.g., `mypackage`) that depends on the core and adds recommended dependencies. However, this approach comes with maintenance challenges: versions must be carefully pinned, and metadata must be kept in sync.
+
+**rind eliminates this burden** by letting you publish both packages from a single repository with automatic version pinning and metadata inheritance:
 
 - **`mypackage-core`**: Minimal dependencies for advanced users
-- **`mypackage`**: Batteries-included for typical users (installs `mypackage-core` plus recommended extras)
+- **`mypackage`**: Batteries-included for typical users
 
 Both provide the same `import mypackage` experience.
 
-## How to use rind
+## Documentation
 
-See the `documentation <https://rind.readthedocs.io>_` for information on how to use this package.
+See the [documentation](https://rind.readthedocs.io) for information on how to use this package.
 
 ## License
 

@@ -1,12 +1,12 @@
 rind
-===================
+====
 
 .. warning::
 
    This package is experimental and under active development.
    The API may change without notice.
 
-A minimal [PEP 517](https://peps.python.org/pep-0517/) build backend for
+A minimal `PEP 517 <https://peps.python.org/pep-0517/>`_ build backend for
 creating **meta-packages** — packages that extend a core package by installing
 additional dependencies.
 
@@ -31,20 +31,20 @@ Putting recommended dependencies behind extras places a burden on typical users
 to discover and use special syntax. But making them required penalizes advanced
 users who need lean installations.
 
-One possible solution is to distribute two packages - a core package with only
-minimal dependencies (e.g. ``mypackage-core``) and a metapackage (e.g.
-``mypackage``) which depends on ``mypackage-core`` and also installs additional
-dependencies. However, this can mean additional maintenance burden, as it
-requires careful pinning of versions in the metapackage to make sure that e.g.
-``mypackage==1.2.3`` will install ``mypackage-core==1.2.3``. In addition, metadata
-such as authors, extras, and so on need to be kept in sync between the two packages.
+One solution is to distribute two packages: a core package with minimal
+dependencies (e.g., ``mypackage-core``) and a meta-package (e.g., ``mypackage``)
+that depends on the core and adds recommended dependencies. However, this
+approach comes with maintenance challenges:
 
-**rind aims to make this approach as easy as possible** by letting you easily publish two packages
-from a single repository:
+- Versions must be carefully pinned so that ``mypackage==1.2.3`` installs
+  ``mypackage-core==1.2.3``
+- Metadata (authors, license, URLs, extras) must be kept in sync between packages
+
+**rind eliminates this burden** by letting you publish both packages from a
+single repository with automatic version pinning and metadata inheritance:
 
 - **mypackage-core**: Minimal dependencies for advanced users
-- **mypackage**: Batteries-included for typical users (installs ``mypackage-core``
-  plus recommended extras)
+- **mypackage**: Batteries-included for typical users
 
 Both provide the same ``import mypackage`` experience, since the code lives in
 ``mypackage-core`` but the import name remains ``mypackage``.
@@ -62,11 +62,12 @@ Key Features
 Quick Example
 -------------
 
-Let's say you have a package ``mypackage`` which you want to split between
-``mypackage-core`` and ``mypackage``. You can keep the core package as the main
-package in the reposiotory and rename it to ``mypackage-core``.
+Suppose you have a package ``mypackage`` that you want to split into
+``mypackage-core`` and ``mypackage``. Keep the core package as the main
+package in your repository and rename it to ``mypackage-core``.
 
-In a subdirectory of your repository (e.g. ``meta/``), create a new ``pyproject.toml``:
+In a subdirectory (e.g., ``meta/``), create a ``pyproject.toml`` for the
+meta-package:
 
 .. code-block:: toml
 
