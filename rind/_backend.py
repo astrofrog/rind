@@ -39,7 +39,7 @@ def _get_version(root=".."):
 
     # Resolve relative to cwd (where pyproject.toml is), not this file
     root_path = Path.cwd() / root
-    return get_version(root=str(root_path.resolve()))
+    return get_version(root=str(root_path.resolve()), search_parent_directories=True)
 
 
 def _safe_name(name):
