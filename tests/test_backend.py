@@ -5,10 +5,8 @@ import tarfile
 import tempfile
 import zipfile
 from pathlib import Path
-from unittest import mock
 
 import pytest
-
 
 # Sample pyproject.toml content for a core package
 CORE_PYPROJECT = """\
@@ -70,8 +68,12 @@ def temp_project(tmp_path):
     (meta_dir / "pyproject.toml").write_text(META_PYPROJECT)
 
     # Initialize git repo for version detection
-    os.system(f"cd {tmp_path} && git init -q && git config user.email 'test@test.com' && git config user.name 'Test'")
-    os.system(f"cd {tmp_path} && git add -A && git commit -q -m 'Initial' && git tag v1.2.3")
+    os.system(
+        f"cd {tmp_path} && git init -q && git config user.email 'test@test.com' && git config user.name 'Test'"
+    )
+    os.system(
+        f"cd {tmp_path} && git add -A && git commit -q -m 'Initial' && git tag v1.2.3"
+    )
 
     return tmp_path
 
@@ -84,8 +86,12 @@ def temp_project_minimal(tmp_path):
     (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_MINIMAL)
 
     # Initialize git repo
-    os.system(f"cd {tmp_path} && git init -q && git config user.email 'test@test.com' && git config user.name 'Test'")
-    os.system(f"cd {tmp_path} && git add -A && git commit -q -m 'Initial' && git tag v0.1.0")
+    os.system(
+        f"cd {tmp_path} && git init -q && git config user.email 'test@test.com' && git config user.name 'Test'"
+    )
+    os.system(
+        f"cd {tmp_path} && git add -A && git commit -q -m 'Initial' && git tag v0.1.0"
+    )
 
     return tmp_path
 
@@ -254,6 +260,7 @@ class TestBuildSdist:
     def test_sdist_inherited_cache(self, temp_project):
         """Test that inherited metadata is cached in sdist."""
         import json
+
         import rind
 
         meta_dir = temp_project / "meta"
@@ -281,13 +288,13 @@ class TestBuildSdist:
 class TestHelperFunctions:
     """Tests for helper functions."""
 
-    def test_normalize_name(self):
-        """Test package name normalization."""
-        from rind._backend import _normalize_name
+    def test_safe_name(self):
+        """Test wheel-safe name generation."""
+        from rind._backend import _safe_name
 
-        assert _normalize_name("My_Package") == "my-package"
-        assert _normalize_name("my.package") == "my-package"
-        assert _normalize_name("my--package") == "my-package"
+        assert _safe_name("My_Package") == "my_package"
+        assert _safe_name("my.package") == "my_package"
+        assert _safe_name("my--package") == "my_package"
 
     def test_wheel_name(self):
         """Test wheel filename generation."""

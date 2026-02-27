@@ -5,15 +5,17 @@ Core implementation of the rind PEP 517 build backend.
 import hashlib
 import io
 import json
-import re
+import sys
 import zipfile
 from base64 import urlsafe_b64encode
 from pathlib import Path
 
+from packaging.utils import canonicalize_name
+
 # tomllib is built-in from Python 3.11+, use tomli for older versions
-try:
+if sys.version_info >= (3, 11):
     import tomllib
-except ImportError:
+else:
     import tomli as tomllib
 
 # This file is included in the sdist to cache inherited metadata,
@@ -25,6 +27,7 @@ def _get_rind_version():
     """Get rind's own version for the wheel generator tag."""
     try:
         from ._version import version
+
         return version
     except ImportError:
         return "0.0.0"
@@ -39,17 +42,18 @@ def _get_version(root=".."):
     return get_version(root=str(root_path.resolve()))
 
 
-def _normalize_name(name):
-    """Normalize package name per PEP 503."""
-    # Replace any run of [-_.] with a single hyphen, lowercase
-    return re.sub(r"[-_.]+", "-", name).lower()
+def _safe_name(name):
+    """Return wheel-safe name (lowercase, underscores).
+
+    Uses PEP 503 normalization, then replaces hyphens with underscores
+    for wheel/sdist filenames per PEP 427.
+    """
+    return canonicalize_name(name).replace("-", "_")
 
 
 def _wheel_name(name, version):
-    """Generate wheel filename."""
-    # Wheel filenames use underscores, not hyphens
-    name_normalized = _normalize_name(name).replace("-", "_")
-    return f"{name_normalized}-{version}-py3-none-any.whl"
+    """Generate wheel filename per PEP 427."""
+    return f"{_safe_name(name)}-{version}-py3-none-any.whl"
 
 
 def _parse_pyproject(path="pyproject.toml"):
@@ -59,24 +63,17 @@ def _parse_pyproject(path="pyproject.toml"):
 
 
 def _record_hash(data):
-    """Calculate hash for RECORD file."""
-    # RECORD uses base64url-encoded sha256 without padding
+    """Calculate hash for RECORD file.
+
+    RECORD uses base64url-encoded sha256 without padding.
+    """
     digest = hashlib.sha256(data).digest()
     hash_str = urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
     return f"sha256={hash_str}"
 
 
-def _resolve_path(path, relative_to="."):
-    """Resolve a potentially relative path."""
-    p = Path(path)
-    if not p.is_absolute():
-        p = Path(relative_to) / p
-    return p.resolve()
-
-
 def _get_inherited_metadata(tool_config):
-    """
-    Get inherited metadata from parent pyproject.toml or cached file.
+    """Get inherited metadata from parent pyproject.toml or cached file.
 
     The cache file is used when building a wheel from an sdist, where
     the parent pyproject.toml is not available.
@@ -90,7 +87,7 @@ def _get_inherited_metadata(tool_config):
     # Otherwise try to load from the parent pyproject.toml
     inherit_path = tool_config.get("inherit-metadata")
     if inherit_path:
-        resolved_path = _resolve_path(inherit_path)
+        resolved_path = (Path.cwd() / inherit_path).resolve()
         if resolved_path.exists():
             inherited_pyproject = _parse_pyproject(resolved_path)
             return inherited_pyproject.get("project", {})
@@ -140,10 +137,10 @@ def _build_metadata(config_settings=None):
             )
 
     # Build the main dependency on the core package
-    core_extras = tool_config.get("include-extras", [])
-    if core_extras:
+    include_extras = tool_config.get("include-extras", [])
+    if include_extras:
         # Include specified extras: core-package[extra1,extra2]==version
-        extras_str = ",".join(core_extras)
+        extras_str = ",".join(include_extras)
         core_dep = f"{core_package}[{extras_str}]=={version}"
     else:
         core_dep = f"{core_package}=={version}"
@@ -154,9 +151,8 @@ def _build_metadata(config_settings=None):
 
     # Build passthrough extras - these re-expose core package extras
     # with the same pinned version
-    passthrough_extras = tool_config.get("passthrough-extras", [])
     optional_deps = {}
-    for extra_name in passthrough_extras:
+    for extra_name in tool_config.get("passthrough-extras", []):
         optional_deps[extra_name] = [f"{core_package}[{extra_name}]=={version}"]
 
     # Helper to get field with priority: tool.rind > [project] > inherited
@@ -206,8 +202,7 @@ def get_requires_for_build_sdist(config_settings=None):
 
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
-    """
-    Build a wheel containing only metadata, no code.
+    """Build a wheel containing only metadata, no code.
 
     This is the main PEP 517 hook for building wheels. The resulting wheel
     contains only the ``.dist-info`` directory with package metadata.
@@ -236,7 +231,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
 
     if fields.get("license"):
         lic = fields["license"]
-        # License can be a string or dict with 'text' key
+        # License can be a string or dict with 'text' key (pyproject.toml format)
         if isinstance(lic, dict):
             metadata_lines.append(f"License: {lic.get('text', '')}")
         else:
@@ -278,17 +273,16 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     metadata_content = "\n".join(metadata_lines) + "\n"
 
     # Build WHEEL file content (PEP 427)
-    rind_version = _get_rind_version()
     wheel_content = f"""\
 Wheel-Version: 1.0
-Generator: rind {rind_version}
+Generator: rind {_get_rind_version()}
 Root-Is-Purelib: true
 Tag: py3-none-any
 """
 
     # Create the wheel zip file
     wheel_path = Path(wheel_directory) / _wheel_name(name, version)
-    dist_info = f"{_normalize_name(name).replace('-', '_')}-{version}.dist-info"
+    dist_info = f"{_safe_name(name)}-{version}.dist-info"
 
     # RECORD tracks all files in the wheel with their hashes
     record_entries = []
@@ -317,8 +311,7 @@ Tag: py3-none-any
 
 
 def build_sdist(sdist_directory, config_settings=None):
-    """
-    Build a minimal source distribution.
+    """Build a minimal source distribution.
 
     The sdist contains the pyproject.toml and a cached copy of the inherited
     metadata (so that wheels can be built from the sdist without access to
@@ -332,8 +325,8 @@ def build_sdist(sdist_directory, config_settings=None):
     description = meta["metadata_fields"].get("description", "")
     inherited = meta["inherited"]
 
-    # sdist filename uses underscores
-    sdist_name = f"{_normalize_name(name).replace('-', '_')}-{version}"
+    # sdist filename uses underscores per PEP 625
+    sdist_name = f"{_safe_name(name)}-{version}"
     sdist_path = Path(sdist_directory) / f"{sdist_name}.tar.gz"
 
     # Cache inherited metadata so wheel builds from sdist work
