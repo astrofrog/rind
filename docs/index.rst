@@ -50,7 +50,7 @@ In a ``meta/`` subdirectory of your repository, create ``pyproject.toml``:
    [tool.rind]
    inherit-metadata = "../pyproject.toml"
    name = "mypackage"
-   core-extras = ["recommended"]
+   include-extras = ["recommended"]
    passthrough-extras = ["test", "docs"]
 
 Then build both packages:

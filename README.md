@@ -36,7 +36,7 @@ inherit-metadata = "../pyproject.toml"
 name = "mypackage"
 
 # Extras from core to include as default dependencies
-core-extras = ["recommended", "optional"]
+include-extras = ["recommended", "optional"]
 
 # Extras to pass through (not included by default, but available)
 passthrough-extras = ["test", "docs"]
@@ -59,14 +59,14 @@ All options go in `[tool.rind]`:
 | `inherit-metadata` | No | Path to parent `pyproject.toml` to inherit from |
 | `description` | No | Override inherited description |
 | `core-package` | No | Core package name (default: inherited name or `{name}-core`) |
-| `core-extras` | No | List of extras to include as required dependencies |
+| `include-extras` | No | List of extras to include as required dependencies |
 | `passthrough-extras` | No | List of extras to re-expose (with pinned versions) |
 | `additional-dependencies` | No | Extra dependencies beyond the core package |
 | `version-root` | No | Root for setuptools_scm (default: `".."`) |
 
 ## How Version Pinning Works
 
-Both packages use [setuptools_scm](https://github.com/pypa/setuptools_scm) to get their version from git tags. When you tag a release:
+rind uses [setuptools_scm](https://github.com/pypa/setuptools_scm) to get the version from git tags. **Your core package must also use setuptools_scm** for version pinning to work correctly. When you tag a release:
 
 ```bash
 git tag v1.2.3
@@ -77,23 +77,21 @@ python -m build meta/    # Creates mypackage-1.2.3-py3-none-any.whl
 
 Since both builds use the same git state, versions always match.
 
-## Example: reproject
+## Example
 
-The [reproject](https://github.com/astrofrog/reproject) package uses this backend:
-
-**Root `pyproject.toml`** (reproject-core):
+**Root `pyproject.toml`** (mypackage-core):
 ```toml
 [project]
-name = "reproject-core"
-dependencies = ["numpy", "astrofrog", "scipy"]  # minimal
+name = "mypackage-core"
+dependencies = ["numpy"]
 
 [project.optional-dependencies]
-dask = ["dask", "zarr"]
-hips = ["pillow", "pyavm"]
+recommended = ["scipy", "matplotlib"]
 test = ["pytest"]
+docs = ["sphinx"]
 ```
 
-**`meta/pyproject.toml`** (reproject):
+**`meta/pyproject.toml`** (mypackage):
 ```toml
 [build-system]
 requires = ["rind"]
@@ -101,16 +99,16 @@ build-backend = "rind"
 
 [tool.rind]
 inherit-metadata = "../pyproject.toml"
-name = "reproject"
-core-extras = ["dask", "hips"]        # Now required
-passthrough-extras = ["test"]          # Still optional
+name = "mypackage"
+include-extras = ["recommended"]
+passthrough-extras = ["test", "docs"]
 ```
 
 Result:
-- `pip install reproject-core` → minimal dependencies
-- `pip install reproject-core[dask]` → adds dask support
-- `pip install reproject` → full experience (core + dask + hips)
-- `pip install reproject[test]` → full experience + test dependencies
+- `pip install mypackage-core` → just numpy
+- `pip install mypackage-core[recommended]` → numpy + scipy + matplotlib
+- `pip install mypackage` → numpy + scipy + matplotlib (recommended included by default)
+- `pip install mypackage[test]` → above + pytest
 
 ## License
 

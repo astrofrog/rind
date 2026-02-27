@@ -77,7 +77,7 @@ Create ``meta/pyproject.toml``:
    description = "My package (batteries included)"
 
    # Extras from core to make required in the meta-package
-   core-extras = ["ml", "viz"]
+   include-extras = ["ml", "viz"]
 
    # Extras to pass through (still optional)
    passthrough-extras = ["test", "docs"]

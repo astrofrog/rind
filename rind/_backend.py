@@ -140,7 +140,7 @@ def _build_metadata(config_settings=None):
             )
 
     # Build the main dependency on the core package
-    core_extras = tool_config.get("core-extras", [])
+    core_extras = tool_config.get("include-extras", [])
     if core_extras:
         # Include specified extras: core-package[extra1,extra2]==version
         extras_str = ",".join(core_extras)

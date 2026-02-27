@@ -41,7 +41,7 @@ build-backend = "rind"
 inherit-metadata = "../core/pyproject.toml"
 name = "mypackage"
 description = "My package with batteries"
-core-extras = ["extra1", "extra2"]
+include-extras = ["extra1", "extra2"]
 passthrough-extras = ["test", "docs"]
 """
 
@@ -114,7 +114,7 @@ class TestBuildMetadata:
             os.chdir(original_cwd)
 
     def test_core_extras(self, temp_project):
-        """Test that core-extras are included in dependencies."""
+        """Test that include-extras are included in dependencies."""
         from rind._backend import _build_metadata
 
         meta_dir = temp_project / "meta"

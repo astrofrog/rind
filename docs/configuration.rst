@@ -69,7 +69,7 @@ The name of the core package to depend on. Defaults to:
    [tool.rind]
    core-package = "mypackage-core"
 
-core-extras
+include-extras
 ~~~~~~~~~~~
 
 **Type:** list of strings
@@ -81,7 +81,7 @@ meta-package. These become part of the main ``Requires-Dist``.
 
    [tool.rind]
    # Users of the meta-package automatically get these extras
-   core-extras = ["recommended", "performance"]
+   include-extras = ["recommended", "performance"]
 
 The resulting wheel will have:
 
@@ -114,7 +114,7 @@ The resulting wheel will have:
 .. tip::
 
    Don't include extras in ``passthrough-extras`` that are already in
-   ``core-extras``. Those are now required, not optional.
+   ``include-extras``. Those are now required, not optional.
 
 additional-dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -203,7 +203,7 @@ Here's a complete ``pyproject.toml`` for a meta-package:
    # core-package = "mypackage-core"
 
    # Make these extras required
-   core-extras = ["recommended", "performance"]
+   include-extras = ["recommended", "performance"]
 
    # Keep these as optional extras
    passthrough-extras = ["test", "docs"]

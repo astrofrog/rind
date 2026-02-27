@@ -52,8 +52,9 @@ this wheel, it:
 Version Pinning
 ---------------
 
-Both the core package and meta-package use `setuptools_scm
-<https://github.com/pypa/setuptools_scm>`_ to determine their version from git tags.
+rind uses `setuptools_scm <https://github.com/pypa/setuptools_scm>`_ to determine
+the meta-package version from git tags. **Your core package must also use
+setuptools_scm** for version pinning to work correctly.
 
 When you tag a release and build both packages:
 
@@ -178,9 +179,9 @@ Limitations
 - **Both packages must be released together**: Since versions are synchronized
   via git tags, you can't release one without the other.
 
-- **setuptools_scm is required**: The backend depends on setuptools_scm for
-  version detection. If you need a different versioning approach, you'd need
-  to modify the backend.
+- **setuptools_scm is required for both packages**: Both the core package and
+  the meta-package must use setuptools_scm for version detection. This ensures
+  that versions stay synchronized when built from the same git tag.
 
 - **No code in meta-package**: The meta-package cannot contain any Python code.
   If you need wrapper code, it should go in the core package.
