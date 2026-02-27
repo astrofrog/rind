@@ -70,7 +70,7 @@ The name of the core package to depend on. Defaults to:
    core-package = "mypackage-core"
 
 include-extras
-~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 **Type:** list of strings
 
