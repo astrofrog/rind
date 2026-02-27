@@ -3,7 +3,9 @@
 > **Warning**
 > This package is experimental and under active development. The API may change without notice.
 
-A minimal [PEP 517](https://peps.python.org/pep-0517/) build backend for creating **meta-packages** — packages that extend a core package by installing additional dependencies.
+A minimal [PEP 517](https://peps.python.org/pep-0517/) build backend to make
+it easy to create a **meta-package** that extends
+a core package by installing additional dependencies.
 
 ## Why use rind?
 
