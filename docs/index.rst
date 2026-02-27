@@ -17,19 +17,27 @@ creating **meta-packages** — packages that contain no code, only dependencies.
 Why use meta-packages?
 ----------------------
 
-Sometimes you want to split a package into two parts:
+Package maintainers often face a tension between two types of users:
 
-- **mypackage-core**: The actual implementation with minimal dependencies
-- **mypackage**: A meta-package that installs ``mypackage-core`` plus recommended
-  optional dependencies
+- **Typical users** want recommended dependencies installed by default for the
+  best experience, without needing to know about extras syntax like
+  ``pip install mypackage[recommended]``
+- **Advanced users** (library authors, Docker image builders, CI pipelines) want
+  minimal installations to reduce dependency conflicts, image sizes, and install
+  times
 
-This pattern lets users choose between:
+Putting recommended dependencies behind extras places a burden on typical users
+to discover and use special syntax. But making them required penalizes advanced
+users who need lean installations.
 
-- **Lightweight install**: ``pip install mypackage-core`` — just the essentials
-- **Batteries included**: ``pip install mypackage`` — the full experience
+**rind solves this** by letting you publish two packages from a single repository:
 
-Both options provide the same ``import mypackage`` experience, since the code
-lives in ``mypackage-core`` but the import name remains ``mypackage``.
+- **mypackage-core**: Minimal dependencies for advanced users
+- **mypackage**: Batteries-included for typical users (installs ``mypackage-core``
+  plus recommended extras)
+
+Both provide the same ``import mypackage`` experience, since the code lives in
+``mypackage-core`` but the import name remains ``mypackage``.
 
 Key Features
 ------------
