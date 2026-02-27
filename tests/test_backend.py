@@ -1,6 +1,7 @@
 """Tests for rind."""
 
 import os
+import subprocess
 import tarfile
 import tempfile
 import zipfile
@@ -68,12 +69,14 @@ def temp_project(tmp_path):
     (meta_dir / "pyproject.toml").write_text(META_PYPROJECT)
 
     # Initialize git repo for version detection
-    os.system(
-        f"cd {tmp_path} && git init -q && git config user.email 'test@test.com' && git config user.name 'Test'"
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True
     )
-    os.system(
-        f"cd {tmp_path} && git add -A && git commit -q -m 'Initial' && git tag v1.2.3"
-    )
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "tag", "v1.2.3"], cwd=tmp_path, check=True)
 
     return tmp_path
 
@@ -86,12 +89,14 @@ def temp_project_minimal(tmp_path):
     (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_MINIMAL)
 
     # Initialize git repo
-    os.system(
-        f"cd {tmp_path} && git init -q && git config user.email 'test@test.com' && git config user.name 'Test'"
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True
     )
-    os.system(
-        f"cd {tmp_path} && git add -A && git commit -q -m 'Initial' && git tag v0.1.0"
-    )
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "tag", "v0.1.0"], cwd=tmp_path, check=True)
 
     return tmp_path
 

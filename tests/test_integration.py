@@ -1,6 +1,7 @@
 """Integration tests that build a real metapackage using rind."""
 
 import subprocess
+import sys
 import zipfile
 
 import pytest
@@ -84,7 +85,7 @@ def test_build_meta_package(integration_project):
 
     # Build the metapackage
     result = subprocess.run(
-        ["python", "-m", "build", "--no-isolation"],
+        [sys.executable, "-m", "build", "--no-isolation"],
         cwd=meta_dir,
         capture_output=True,
         text=True,
@@ -124,7 +125,7 @@ def test_build_sdist_then_wheel(integration_project):
 
     # Build sdist first
     result = subprocess.run(
-        ["python", "-m", "build", "--no-isolation", "--sdist"],
+        [sys.executable, "-m", "build", "--no-isolation", "--sdist"],
         cwd=meta_dir,
         capture_output=True,
         text=True,
@@ -148,7 +149,7 @@ def test_build_sdist_then_wheel(integration_project):
 
     # Build wheel from extracted sdist (no access to parent pyproject.toml)
     result = subprocess.run(
-        ["python", "-m", "build", "--no-isolation", "--wheel"],
+        [sys.executable, "-m", "build", "--no-isolation", "--wheel"],
         cwd=extracted,
         capture_output=True,
         text=True,
