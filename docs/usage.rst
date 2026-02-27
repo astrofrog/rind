@@ -79,7 +79,7 @@ Create ``meta/pyproject.toml``:
    # Extras from core to make required in the meta-package
    include-extras = ["ml", "viz"]
 
-   # Extras to pass through (still optional)
+   # Extras to pass through and expose on the meta-package (still optional)
    passthrough-extras = ["test", "docs"]
 
 Step 3: Build Both Packages

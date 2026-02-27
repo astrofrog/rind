@@ -6,16 +6,17 @@ rind
    This package is experimental and under active development.
    The API may change without notice.
 
-A minimal `PEP 517 <https://peps.python.org/pep-0517/>`_ build backend for
-creating **meta-packages** — packages that contain no code, only dependencies.
+A minimal [PEP 517](https://peps.python.org/pep-0517/) build backend for
+creating **meta-packages** — packages that extend a core package by installing
+additional dependencies.
 
 .. note::
 
    A meta-package is a package that exists solely to aggregate dependencies.
    When installed, it pulls in other packages but provides no code of its own.
 
-Why use meta-packages?
-----------------------
+Why use rind?
+-------------
 
 Package maintainers often face a tension between two types of users:
 
@@ -30,7 +31,16 @@ Putting recommended dependencies behind extras places a burden on typical users
 to discover and use special syntax. But making them required penalizes advanced
 users who need lean installations.
 
-**rind solves this** by letting you publish two packages from a single repository:
+One possible solution is to distribute two packages - a core package with only
+minimal dependencies (e.g. ``mypackage-core``) and a metapackage (e.g.
+``mypackage``) which depends on ``mypackage-core`` and also installs additional
+dependencies. However, this can mean additional maintenance burden, as it
+requires careful pinning of versions in the metapackage to make sure that e.g.
+``mypackage==1.2.3`` will install ``mypackage-core==1.2.3``. In addition, metadata
+such as authors, extras, and so on need to be kept in sync between the two packages.
+
+**rind aims to make this approach as easy as possible** by letting you easily publish two packages
+from a single repository:
 
 - **mypackage-core**: Minimal dependencies for advanced users
 - **mypackage**: Batteries-included for typical users (installs ``mypackage-core``
@@ -52,7 +62,11 @@ Key Features
 Quick Example
 -------------
 
-In a ``meta/`` subdirectory of your repository, create ``pyproject.toml``:
+Let's say you have a package ``mypackage`` which you want to split between
+``mypackage-core`` and ``mypackage``. You can keep the core package as the main
+package in the reposiotory and rename it to ``mypackage-core``.
+
+In a subdirectory of your repository (e.g. ``meta/``), create a new ``pyproject.toml``:
 
 .. code-block:: toml
 
