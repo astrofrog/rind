@@ -12,18 +12,22 @@ jobs:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       envs: |
-        - linux: py39
-        - linux: py310
-        - linux: py311
-        - linux: py312
-        - linux: py313
-        - macos: py312
-        - windows: py312
+        - linux: py39-test
+        - linux: py311-test
+        - linux: py313-test
+        - macos: py39-test
+        - macos: py310-test
+        - macos: py312-test
+        - windows: py310-test
+        - windows: py312-test
+        - windows: py313-test
         - linux: lint
           pytest: false
         - linux: docs
           pytest: false
-        - linux: integration
+        - linux: py311-integration
+        - macos: py312-integration
+        - windows: py313-integration
 
   build:
     needs: [test]
