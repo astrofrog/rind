@@ -70,30 +70,14 @@ def temp_project(tmp_path):
 
     # Initialize git repo for version detection
     # Use subprocess with cwd for cross-platform compatibility (os.system cd doesn't work across drives on Windows)
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     subprocess.run(
-        ["git", "init", "-q"],
-        cwd=tmp_path, check=True
+        ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True
     )
-    subprocess.run(
-        ["git", "config", "user.email", "test@test.com"],
-        cwd=tmp_path, check=True
-    )
-    subprocess.run(
-        ["git", "config", "user.name", "Test"],
-        cwd=tmp_path, check=True
-    )
-    subprocess.run(
-        ["git", "add", "-A"],
-        cwd=tmp_path, check=True
-    )
-    subprocess.run(
-        ["git", "commit", "-q", "-m", "Initial"],
-        cwd=tmp_path, check=True
-    )
-    subprocess.run(
-        ["git", "tag", "v1.2.3"],
-        cwd=tmp_path, check=True
-    )
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "tag", "v1.2.3"], cwd=tmp_path, check=True)
 
     return tmp_path
 
@@ -107,30 +91,14 @@ def temp_project_minimal(tmp_path):
 
     # Initialize git repo
     # Use subprocess with cwd for cross-platform compatibility (os.system cd doesn't work across drives on Windows)
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     subprocess.run(
-        ["git", "init", "-q"],
-        cwd=tmp_path, check=True
+        ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True
     )
-    subprocess.run(
-        ["git", "config", "user.email", "test@test.com"],
-        cwd=tmp_path, check=True
-    )
-    subprocess.run(
-        ["git", "config", "user.name", "Test"],
-        cwd=tmp_path, check=True
-    )
-    subprocess.run(
-        ["git", "add", "-A"],
-        cwd=tmp_path, check=True
-    )
-    subprocess.run(
-        ["git", "commit", "-q", "-m", "Initial"],
-        cwd=tmp_path, check=True
-    )
-    subprocess.run(
-        ["git", "tag", "v0.1.0"],
-        cwd=tmp_path, check=True
-    )
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "tag", "v0.1.0"], cwd=tmp_path, check=True)
 
     return tmp_path
 
