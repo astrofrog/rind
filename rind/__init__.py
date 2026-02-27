@@ -1,5 +1,5 @@
 """
-rind: A minimal PEP 517 build backend for meta-packages.
+rind: A minimal PEP 517 build backend for metapackages.
 
 See https://rind.readthedocs.io for documentation.
 """

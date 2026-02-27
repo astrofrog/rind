@@ -53,7 +53,7 @@ Version Pinning
 ---------------
 
 rind uses `setuptools_scm <https://github.com/pypa/setuptools_scm>`_ to determine
-the meta-package version from git tags. **Your core package must also use
+the metapackage version from git tags. **Your core package must also use
 setuptools_scm** for version pinning to work correctly.
 
 When you tag a release and build both packages:
@@ -67,7 +67,7 @@ When you tag a release and build both packages:
 Both builds call ``setuptools_scm.get_version()`` which reads the same git tag,
 so both get version ``1.2.3``.
 
-The meta-package's ``METADATA`` file contains:
+The metapackage's ``METADATA`` file contains:
 
 .. code-block:: text
 
@@ -88,12 +88,12 @@ When ``inherit-metadata`` is specified, the backend:
 
 1. Reads the parent ``pyproject.toml``
 2. Extracts the ``[project]`` table
-3. Uses those values as defaults for the meta-package
+3. Uses those values as defaults for the metapackage
 
 The inheritance priority is:
 
 1. ``[tool.rind]`` values (highest priority)
-2. ``[project]`` values in the meta-package's own ``pyproject.toml``
+2. ``[project]`` values in the metapackage's own ``pyproject.toml``
 3. Inherited values from parent ``pyproject.toml`` (lowest priority)
 
 sdist and Inheritance
@@ -135,8 +135,8 @@ containing the code is ``mypackage/``, so users write:
 
    import mypackage  # Works!
 
-When ``mypackage`` (the meta-package) is installed, it pulls in ``mypackage-core``,
-which provides the ``mypackage/`` directory. The meta-package itself provides
+When ``mypackage`` (the metapackage) is installed, it pulls in ``mypackage-core``,
+which provides the ``mypackage/`` directory. The metapackage itself provides
 no Python files, so there's no conflict.
 
 Comparison with Alternatives
@@ -157,7 +157,7 @@ You could use optional dependencies:
 
 Users install with ``pip install mypackage[recommended]``.
 
-The meta-package approach is better when:
+The metapackage approach is better when:
 
 - You want the "batteries included" experience to be the default
 - The package name without brackets should give the full experience
@@ -180,8 +180,8 @@ Limitations
   via git tags, you can't release one without the other.
 
 - **setuptools_scm is required for both packages**: Both the core package and
-  the meta-package must use setuptools_scm for version detection. This ensures
+  the metapackage must use setuptools_scm for version detection. This ensures
   that versions stay synchronized when built from the same git tag.
 
-- **No code in meta-package**: The meta-package cannot contain any Python code.
+- **No code in metapackage**: The metapackage cannot contain any Python code.
   If you need wrapper code, it should go in the core package.

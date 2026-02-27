@@ -7,12 +7,20 @@ rind
    The API may change without notice.
 
 A minimal `PEP 517 <https://peps.python.org/pep-0517/>`_ build backend to make
-it easy to create a **meta-package** that extends
+it easy to create a **metapackage** that extends
 a core package by installing additional dependencies.
+
+**core | kɔː |**
+*noun*:
+the tough central part of various fruits, containing the seeds
+
+**rind | rʌɪnd |**
+*noun*:
+the  outer skin of certain fruit, especially citrus fruit
 
 .. note::
 
-   A meta-package is a package that exists solely to aggregate dependencies.
+   A metapackage is a package that exists solely to aggregate dependencies.
    When installed, it pulls in other packages but provides no code of its own.
 
 Why use rind?
@@ -32,27 +40,21 @@ to discover and use special syntax. But making them required penalizes advanced
 users who need lean installations.
 
 One solution is to distribute two packages: a core package with minimal
-dependencies (e.g., ``mypackage-core``) and a meta-package (e.g., ``mypackage``)
+dependencies (e.g., ``mypackage-core``) and a metapackage (e.g., ``mypackage``)
 that depends on the core and adds recommended dependencies. However, this
 approach comes with maintenance challenges:
 
 - Versions must be carefully pinned so that ``mypackage==1.2.3`` installs
   ``mypackage-core==1.2.3``
-- Metadata (authors, license, URLs, extras) must be kept in sync between packages
+- Metadata (versions, authors, license, URLs, extras) must be kept in sync between packages
 
 **rind eliminates this burden** by letting you publish both packages from a
-single repository with automatic version pinning and metadata inheritance:
-
-- **mypackage-core**: Minimal dependencies for advanced users
-- **mypackage**: Batteries-included for typical users
-
-Both provide the same ``import mypackage`` experience, since the code lives in
-``mypackage-core`` but the import name remains ``mypackage``.
+single repository with automatic version pinning and metadata inheritance.
 
 Key Features
 ------------
 
-- **Zero Python code**: Output wheels contain only ``.dist-info/`` metadata
+- **Zero Python code**: Output wheels for the metapackage contain only ``.dist-info/`` metadata
 - **Automatic version pinning**: ``mypackage==1.2.3`` always installs
   ``mypackage-core==1.2.3``
 - **Metadata inheritance**: Reuse authors, license, URLs from the core package
@@ -67,7 +69,7 @@ Suppose you have a package ``mypackage`` that you want to split into
 package in your repository and rename it to ``mypackage-core``.
 
 In a subdirectory (e.g., ``meta/``), create a ``pyproject.toml`` for the
-meta-package:
+metapackage:
 
 .. code-block:: toml
 
@@ -86,7 +88,7 @@ Then build both packages:
 .. code-block:: bash
 
    $ python -m build .        # Build mypackage-core
-   $ python -m build meta/    # Build mypackage (meta-package)
+   $ python -m build meta/    # Build mypackage (metapackage)
 
 Contents
 --------

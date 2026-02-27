@@ -12,7 +12,7 @@ name
 
 **Type:** string
 
-The name of the meta-package. This is required and must be different from the
+The name of the metapackage. This is required and must be different from the
 core package name.
 
 .. code-block:: toml
@@ -59,10 +59,11 @@ core-package
 
 **Type:** string
 
-The name of the core package to depend on. Defaults to:
+The name of the core package to depend on. If not specified, defaults to the
+``name`` from inherited metadata (requires ``inherit-metadata`` to be set).
 
-1. The ``name`` from inherited metadata (if ``inherit-metadata`` is set)
-2. Otherwise, ``{name}-core``
+If neither ``core-package`` nor ``inherit-metadata`` is specified, an error
+is raised.
 
 .. code-block:: toml
 
@@ -75,12 +76,12 @@ include-extras
 **Type:** list of strings
 
 Extras from the core package to include as required dependencies in the
-meta-package. These become part of the main ``Requires-Dist``.
+metapackage. These become part of the main ``Requires-Dist``.
 
 .. code-block:: toml
 
    [tool.rind]
-   # Users of the meta-package automatically get these extras
+   # Users of the metapackage automatically get these extras
    include-extras = ["recommended", "performance"]
 
 The resulting wheel will have:
@@ -94,7 +95,7 @@ passthrough-extras
 
 **Type:** list of strings
 
-Extras from the core package to re-expose in the meta-package. These remain
+Extras from the core package to re-expose in the metapackage. These remain
 optional but are pinned to the same version.
 
 .. code-block:: toml
@@ -171,19 +172,19 @@ version-root
 **Type:** string (path)
 
 Root directory for setuptools_scm version detection. Defaults to ``".."``
-(parent directory), which works when the meta-package is in a subdirectory.
+(parent directory), which works when the metapackage is in a subdirectory.
 
 .. code-block:: toml
 
    [tool.rind]
    version-root = ".."
 
-If your meta-package is at the repository root (unusual), set this to ``"."``.
+If your metapackage is at the repository root (unusual), set this to ``"."``.
 
 Complete Example
 ----------------
 
-Here's a complete ``pyproject.toml`` for a meta-package:
+Here's a complete ``pyproject.toml`` for a metapackage:
 
 .. code-block:: toml
 

@@ -1,6 +1,6 @@
 [project]
 name = "rind"
-description = "A minimal PEP 517 build backend for creating meta-packages"
+description = "A minimal PEP 517 build backend for creating metapackages"
 readme = "README.md"
 license = {text = "BSD-3-Clause"}
 authors = [
@@ -25,7 +25,7 @@ classifiers = [
     "Topic :: Software Development :: Build Tools",
     "Topic :: System :: Software Distribution",
 ]
-keywords = ["packaging", "build", "meta-package", "pep517", "rind"]
+keywords = ["packaging", "build", "metapackage", "pep517", "rind"]
 dynamic = ["version"]
 
 [project.urls]

@@ -1,7 +1,7 @@
 Usage Guide
 ===========
 
-This guide walks through setting up a meta-package for an existing project.
+This guide walks through setting up a metapackage for an existing project.
 
 Prerequisites
 -------------
@@ -16,7 +16,18 @@ Both packages will get their version from the same git tag, ensuring that
 Repository Structure
 --------------------
 
-A typical setup has the meta-package configuration in a ``meta/`` subdirectory:
+A typical setup has the metapackage configuration in a ``meta/`` subdirectory:
+
+.. code-block:: text
+
+   myproject/
+   ├── pyproject.toml          # Core package (mypackage-core)
+   │   mypackage/          # Actual code
+   │   └── __init__.py
+   └── meta/
+       └── pyproject.toml      # Meta-package (mypackage)
+
+or if you use the ``src`` layout for the main package:
 
 .. code-block:: text
 
@@ -87,16 +98,16 @@ Create ``meta/pyproject.toml``:
    # Inherit metadata from core package
    inherit-metadata = "../pyproject.toml"
 
-   # This is the meta-package name
+   # This is the metapackage name
    name = "mypackage"
 
    # Optional: override the description
    description = "My package (batteries included)"
 
-   # Extras from core to make required in the meta-package
+   # Extras from core to make required in the metapackage
    include-extras = ["ml", "viz"]
 
-   # Extras to pass through and expose on the meta-package (still optional)
+   # Extras to pass through and expose on the metapackage (still optional)
    passthrough-extras = ["test", "docs"]
 
 Step 3: Build Both Packages
@@ -107,7 +118,7 @@ Step 3: Build Both Packages
    # Build the core package
    $ python -m build .
 
-   # Build the meta-package
+   # Build the metapackage
    $ python -m build meta/
 
 This creates:
@@ -155,46 +166,3 @@ After release, users can choose their install:
 
 All options provide ``import mypackage`` because the actual code lives in
 ``mypackage-core`` but the package directory is named ``mypackage/``.
-
-CI/CD Integration
------------------
-
-Here's an example GitHub Actions workflow for releasing both packages:
-
-.. code-block:: yaml
-
-   name: Release
-
-   on:
-     push:
-       tags:
-         - 'v*'
-
-   jobs:
-     build:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
-           with:
-             fetch-depth: 0  # Required for setuptools_scm
-
-         - uses: actions/setup-python@v5
-           with:
-             python-version: '3.12'
-
-         - name: Install build tools
-           run: pip install build twine
-
-         - name: Build core package
-           run: python -m build .
-
-         - name: Build meta-package
-           run: python -m build meta/
-
-         - name: Upload to PyPI
-           env:
-             TWINE_USERNAME: __token__
-             TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-           run: |
-             twine upload dist/*
-             twine upload meta/dist/*

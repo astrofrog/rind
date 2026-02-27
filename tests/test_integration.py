@@ -1,4 +1,4 @@
-"""Integration tests that build a real meta-package using rind."""
+"""Integration tests that build a real metapackage using rind."""
 
 import subprocess
 import zipfile
@@ -79,10 +79,10 @@ def integration_project(tmp_path):
 
 
 def test_build_meta_package(integration_project):
-    """Test building a meta-package with python -m build."""
+    """Test building a metapackage with python -m build."""
     meta_dir = integration_project / "meta"
 
-    # Build the meta-package
+    # Build the metapackage
     result = subprocess.run(
         ["python", "-m", "build", "--no-isolation"],
         cwd=meta_dir,

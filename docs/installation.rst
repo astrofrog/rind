@@ -2,7 +2,7 @@ Installation
 ============
 
 rind is a build-time dependency, so you typically don't install
-it directly. Instead, you declare it in your meta-package's ``pyproject.toml``:
+it directly. Instead, you declare it in your metapackage's ``pyproject.toml``:
 
 .. code-block:: toml
 

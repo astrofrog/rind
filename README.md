@@ -4,7 +4,7 @@
 > This package is experimental and under active development. The API may change without notice.
 
 A minimal [PEP 517](https://peps.python.org/pep-0517/) build backend to make
-it easy to create a **meta-package** that extends
+it easy to create a **metapackage** that extends
 a core package by installing additional dependencies.
 
 ## Why use rind?
@@ -16,7 +16,7 @@ Package maintainers often face a tension between two types of users:
 
 Putting recommended dependencies behind extras places a burden on typical users to discover and use special syntax. But making them required penalizes advanced users who need lean installations.
 
-One solution is to distribute two packages: a core package with minimal dependencies (e.g., `mypackage-core`) and a meta-package (e.g., `mypackage`) that depends on the core and adds recommended dependencies. However, this approach comes with maintenance challenges: versions must be carefully pinned, and metadata must be kept in sync.
+One solution is to distribute two packages: a core package with minimal dependencies (e.g., `mypackage-core`) and a metapackage (e.g., `mypackage`) that depends on the core and adds recommended dependencies. However, this approach comes with maintenance challenges: versions must be carefully pinned, and metadata must be kept in sync.
 
 **rind eliminates this burden** by letting you publish both packages from a single repository with automatic version pinning and metadata inheritance:
 

@@ -29,7 +29,7 @@ test = ["pytest>=7.0"]
 docs = ["sphinx>=7.0"]
 """
 
-# Sample pyproject.toml content for a meta-package
+# Sample pyproject.toml content for a metapackage
 META_PYPROJECT = """\
 [build-system]
 requires = ["rind"]
