@@ -46,6 +46,7 @@ test = [
 dev = [
     "ruff>=0.9",
     "pre-commit>=4.0",
+    "tox>=4.0",
 ]
 
 [build-system]

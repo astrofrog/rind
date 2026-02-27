@@ -70,7 +70,6 @@ Contents
    usage
    configuration
    how-it-works
-   changelog
 
 Indices and tables
 ------------------
