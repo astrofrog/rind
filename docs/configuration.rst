@@ -112,10 +112,27 @@ The resulting wheel will have:
    Provides-Extra: docs
    Requires-Dist: mypackage-core[docs]==1.2.3; extra == 'docs'
 
-.. tip::
+Note that you can use ``["*"]`` to pass through all extras from the core package:
 
-   Don't include extras in ``passthrough-extras`` that are already in
-   ``include-extras``. Those are now required, not optional.
+.. code-block:: toml
+
+   [tool.rind]
+   passthrough-extras = ["*"]
+
+This is particularly useful for existing packages transitioning to use rind.
+By passing through all extras, the metapackage preserves full backward
+compatibility - any code that previously depended on
+``mypackage[someextra]`` will continue to work unchanged with the new
+metapackage structure.
+
+.. note::
+
+   It's fine if an extra appears in both ``include-extras`` and
+   ``passthrough-extras`` (either explicitly or via ``["*"]``). When a user
+   installs the passthrough extra, it will be a no-op since that extra's
+   dependencies are already installed as part of the main package. This
+   means you don't need to carefully exclude ``include-extras`` from your
+   passthrough list.
 
 additional-dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -206,8 +223,8 @@ Here's a complete ``pyproject.toml`` for a metapackage:
    # Make these extras required
    include-extras = ["recommended", "performance"]
 
-   # Keep these as optional extras
-   passthrough-extras = ["test", "docs"]
+   # Pass through all extras for backward compatibility
+   passthrough-extras = ["*"]
 
    # Add extra dependencies not in core
    additional-dependencies = [
