@@ -150,9 +150,15 @@ def _build_metadata(config_settings=None):
     dependencies.extend(tool_config.get("additional-dependencies", []))
 
     # Build passthrough extras - these re-expose core package extras
-    # with the same pinned version
+    # with the same pinned version. Use ["*"] to pass through all extras
+    # from the inherited metadata.
     optional_deps = {}
-    for extra_name in tool_config.get("passthrough-extras", []):
+    passthrough_extras = tool_config.get("passthrough-extras", [])
+    if passthrough_extras == ["*"]:
+        # Pass through all extras from inherited optional-dependencies
+        inherited_optional = inherited.get("optional-dependencies", {})
+        passthrough_extras = list(inherited_optional.keys())
+    for extra_name in passthrough_extras:
         optional_deps[extra_name] = [f"{core_package}[{extra_name}]=={version}"]
 
     # Helper to get field with priority: tool.rind > [project] > inherited
