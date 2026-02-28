@@ -54,6 +54,18 @@ name = "mypackage"
 core-package = "mypackage-core"
 """
 
+META_PYPROJECT_WILDCARD = """\
+[build-system]
+requires = ["rind"]
+build-backend = "rind"
+
+[tool.rind]
+inherit-metadata = "../core/pyproject.toml"
+name = "mypackage"
+include-extras = ["extra1", "extra2"]
+passthrough-extras = ["*"]
+"""
+
 
 @pytest.fixture
 def temp_project(tmp_path):
@@ -97,6 +109,32 @@ def temp_project_minimal(tmp_path):
     subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
     subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
     subprocess.run(["git", "tag", "v0.1.0"], cwd=tmp_path, check=True)
+
+    return tmp_path
+
+
+@pytest.fixture
+def temp_project_wildcard(tmp_path):
+    """Create a project with wildcard passthrough-extras."""
+    # Create core package pyproject.toml
+    core_dir = tmp_path / "core"
+    core_dir.mkdir()
+    (core_dir / "pyproject.toml").write_text(CORE_PYPROJECT)
+
+    # Create meta package pyproject.toml with wildcard passthrough
+    meta_dir = tmp_path / "meta"
+    meta_dir.mkdir()
+    (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_WILDCARD)
+
+    # Initialize git repo
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True
+    )
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "tag", "v1.2.3"], cwd=tmp_path, check=True)
 
     return tmp_path
 
@@ -155,6 +193,27 @@ class TestBuildMetadata:
             assert "docs" in optional
             assert "mypackage-core[test]==1.2.3" in optional["test"][0]
             assert "mypackage-core[docs]==1.2.3" in optional["docs"][0]
+        finally:
+            os.chdir(original_cwd)
+
+    def test_passthrough_extras_wildcard(self, temp_project_wildcard):
+        """Test that passthrough-extras = ['*'] passes through all extras."""
+        from rind._backend import _build_metadata
+
+        meta_dir = temp_project_wildcard / "meta"
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            meta = _build_metadata()
+
+            optional = meta["optional_deps"]
+            # Should have all 4 extras from core package
+            assert "extra1" in optional
+            assert "extra2" in optional
+            assert "test" in optional
+            assert "docs" in optional
+            assert "mypackage-core[extra1]==1.2.3" in optional["extra1"][0]
+            assert "mypackage-core[test]==1.2.3" in optional["test"][0]
         finally:
             os.chdir(original_cwd)
 
