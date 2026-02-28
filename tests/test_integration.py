@@ -2,6 +2,7 @@
 
 import subprocess
 import sys
+import tarfile
 import zipfile
 
 import pytest
@@ -138,11 +139,13 @@ def test_build_sdist_then_wheel(integration_project):
     assert len(sdists) == 1
 
     # Extract sdist to a new location (simulating pip download)
-    import tarfile
-
     extract_dir = integration_project / "sdist_extract"
     with tarfile.open(sdists[0], "r:gz") as tar:
-        tar.extractall(extract_dir, filter="data")
+        # filter parameter added in Python 3.12
+        if sys.version_info >= (3, 12):
+            tar.extractall(extract_dir, filter="data")
+        else:
+            tar.extractall(extract_dir)
 
     # Find extracted directory
     extracted = list(extract_dir.iterdir())[0]
