@@ -172,6 +172,33 @@ core-path = "../core"
 name = "mypackage"
 """
 
+# Core package with dynamic version via setuptools (not setuptools_scm)
+# This exercises the _get_version_via_backend fallback
+CORE_PYPROJECT_DYNAMIC_SETUPTOOLS = """\
+[project]
+name = "mypackage-core"
+description = "My package core with dynamic version"
+requires-python = ">=3.9"
+dynamic = ["version"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "mypackage_core.__version__"}
+"""
+
+META_PYPROJECT_DYNAMIC_SETUPTOOLS = """\
+[build-system]
+requires = ["rind"]
+build-backend = "rind"
+
+[tool.rind]
+core-path = "../core"
+name = "mypackage"
+"""
+
 
 @pytest.fixture
 def temp_project(tmp_path):
@@ -295,6 +322,25 @@ def temp_project_keywords_string(tmp_path):
     return tmp_path
 
 
+@pytest.fixture
+def temp_project_dynamic_setuptools(tmp_path):
+    """Create a project with dynamic version via setuptools (not setuptools_scm)."""
+    core_dir = tmp_path / "core"
+    core_dir.mkdir()
+    (core_dir / "pyproject.toml").write_text(CORE_PYPROJECT_DYNAMIC_SETUPTOOLS)
+
+    # Create a Python package with __version__
+    pkg_dir = core_dir / "mypackage_core"
+    pkg_dir.mkdir()
+    (pkg_dir / "__init__.py").write_text('__version__ = "4.5.6"\n')
+
+    meta_dir = tmp_path / "meta"
+    meta_dir.mkdir()
+    (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_DYNAMIC_SETUPTOOLS)
+
+    return tmp_path
+
+
 class TestBuildMetadata:
     """Tests for _build_metadata function."""
 
@@ -405,6 +451,23 @@ class TestBuildMetadata:
             assert "docs" in optional
             assert "mypackage-core[extra1]==1.2.3" in optional["extra1"][0]
             assert "mypackage-core[test]==1.2.3" in optional["test"][0]
+        finally:
+            os.chdir(original_cwd)
+
+    def test_dynamic_version_via_backend(self, temp_project_dynamic_setuptools):
+        """Test version detection via PEP 517 backend fallback."""
+        from rind._metadata import build_metadata
+
+        meta_dir = temp_project_dynamic_setuptools / "meta"
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            meta = build_metadata()
+
+            # Version should be read via the backend fallback
+            assert meta["version"] == "4.5.6"
+            assert meta["core_package"] == "mypackage-core"
+            assert "mypackage-core==4.5.6" in meta["dependencies"][0]
         finally:
             os.chdir(original_cwd)
 
@@ -665,6 +728,15 @@ class TestVersionHelpers:
         )
         assert "pyproject_hooks" in reqs
         assert "flit_core>=3.0" in reqs
+
+    def test_get_version_via_backend_no_backend(self):
+        """Test error when build-backend is not specified."""
+        from pathlib import Path
+
+        from rind._version_helpers import _get_version_via_backend
+
+        with pytest.raises(ValueError, match="no build-backend specified"):
+            _get_version_via_backend(Path("."), {})
 
 
 class TestGetRequires:

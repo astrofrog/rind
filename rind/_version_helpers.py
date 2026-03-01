@@ -78,9 +78,7 @@ def get_version(core_pyproject, core_dir):
         return scm_get_version(root=str(core_dir), search_parent_directories=True)
 
     # Strategy 3: Call the core's build backend via pyproject_hooks
-    return _get_version_via_backend(
-        core_dir, core_pyproject.get("build-system", {})
-    )
+    return _get_version_via_backend(core_dir, core_pyproject.get("build-system", {}))
 
 
 def _get_version_via_backend(core_dir, build_system):
