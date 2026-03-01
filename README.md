@@ -1,6 +1,7 @@
 # rind
 
 [![CI](https://github.com/astrofrog/rind/actions/workflows/ci.yml/badge.svg)](https://github.com/astrofrog/rind/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/astrofrog/rind/branch/main/graph/badge.svg)](https://codecov.io/gh/astrofrog/rind)
 [![Documentation Status](https://readthedocs.org/projects/rind/badge/?version=latest)](https://rind.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://img.shields.io/pypi/v/rind.svg)](https://pypi.org/project/rind/)
 [![Python versions](https://img.shields.io/pypi/pyversions/rind.svg)](https://pypi.org/project/rind/)

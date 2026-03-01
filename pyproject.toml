@@ -83,3 +83,9 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["rind"]
+
+[tool.coverage.run]
+omit = ["*/_version.py"]
+
+[tool.coverage.report]
+omit = ["*/_version.py"]

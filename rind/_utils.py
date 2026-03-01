@@ -13,7 +13,7 @@ from packaging.utils import canonicalize_name
 if sys.version_info >= (3, 11):
     import tomllib
 else:
-    import tomli as tomllib
+    import tomli as tomllib  # pragma: no cover
 
 
 def get_rind_version():
@@ -22,7 +22,7 @@ def get_rind_version():
         from ._version import version
 
         return version
-    except ImportError:
+    except ImportError:  # pragma: no cover
         return "0.0.0"
 
 

@@ -113,6 +113,92 @@ name = "mypackage"
 include-extras = ["extra1"]
 """
 
+# Core package with string license, classifiers, and keywords
+CORE_PYPROJECT_FULL_METADATA = """\
+[project]
+name = "mypackage-core"
+version = "3.0.0"
+description = "My package core with full metadata"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    {name = "Test Author", email = "test@example.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+]
+keywords = ["test", "package"]
+
+[project.urls]
+Homepage = "https://example.com"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+"""
+
+META_PYPROJECT_FULL_METADATA = """\
+[build-system]
+requires = ["rind"]
+build-backend = "rind"
+
+[tool.rind]
+core-path = "../core"
+name = "mypackage"
+"""
+
+# Core package with keywords as comma-separated string
+CORE_PYPROJECT_KEYWORDS_STRING = """\
+[project]
+name = "mypackage-core"
+version = "3.0.0"
+description = "My package core"
+requires-python = ">=3.9"
+keywords = "test, package, example"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+"""
+
+META_PYPROJECT_KEYWORDS_STRING = """\
+[build-system]
+requires = ["rind"]
+build-backend = "rind"
+
+[tool.rind]
+core-path = "../core"
+name = "mypackage"
+"""
+
+# Core package with dynamic version via setuptools (not setuptools_scm)
+# This exercises the _get_version_via_backend fallback
+CORE_PYPROJECT_DYNAMIC_SETUPTOOLS = """\
+[project]
+name = "mypackage-core"
+description = "My package core with dynamic version"
+requires-python = ">=3.9"
+dynamic = ["version"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "mypackage_core.__version__"}
+"""
+
+META_PYPROJECT_DYNAMIC_SETUPTOOLS = """\
+[build-system]
+requires = ["rind"]
+build-backend = "rind"
+
+[tool.rind]
+core-path = "../core"
+name = "mypackage"
+"""
+
 
 @pytest.fixture
 def temp_project(tmp_path):
@@ -204,6 +290,53 @@ def temp_project_wildcard(tmp_path):
     subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
     subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
     subprocess.run(["git", "tag", "v1.2.3"], cwd=tmp_path, check=True)
+
+    return tmp_path
+
+
+@pytest.fixture
+def temp_project_full_metadata(tmp_path):
+    """Create a project with string license, classifiers, and keywords."""
+    core_dir = tmp_path / "core"
+    core_dir.mkdir()
+    (core_dir / "pyproject.toml").write_text(CORE_PYPROJECT_FULL_METADATA)
+
+    meta_dir = tmp_path / "meta"
+    meta_dir.mkdir()
+    (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_FULL_METADATA)
+
+    return tmp_path
+
+
+@pytest.fixture
+def temp_project_keywords_string(tmp_path):
+    """Create a project with keywords as comma-separated string."""
+    core_dir = tmp_path / "core"
+    core_dir.mkdir()
+    (core_dir / "pyproject.toml").write_text(CORE_PYPROJECT_KEYWORDS_STRING)
+
+    meta_dir = tmp_path / "meta"
+    meta_dir.mkdir()
+    (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_KEYWORDS_STRING)
+
+    return tmp_path
+
+
+@pytest.fixture
+def temp_project_dynamic_setuptools(tmp_path):
+    """Create a project with dynamic version via setuptools (not setuptools_scm)."""
+    core_dir = tmp_path / "core"
+    core_dir.mkdir()
+    (core_dir / "pyproject.toml").write_text(CORE_PYPROJECT_DYNAMIC_SETUPTOOLS)
+
+    # Create a Python package with __version__
+    pkg_dir = core_dir / "mypackage_core"
+    pkg_dir.mkdir()
+    (pkg_dir / "__init__.py").write_text('__version__ = "4.5.6"\n')
+
+    meta_dir = tmp_path / "meta"
+    meta_dir.mkdir()
+    (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_DYNAMIC_SETUPTOOLS)
 
     return tmp_path
 
@@ -321,6 +454,23 @@ class TestBuildMetadata:
         finally:
             os.chdir(original_cwd)
 
+    def test_dynamic_version_via_backend(self, temp_project_dynamic_setuptools):
+        """Test version detection via PEP 517 backend fallback."""
+        from rind._metadata import build_metadata
+
+        meta_dir = temp_project_dynamic_setuptools / "meta"
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            meta = build_metadata()
+
+            # Version should be read via the backend fallback
+            assert meta["version"] == "4.5.6"
+            assert meta["core_package"] == "mypackage-core"
+            assert "mypackage-core==4.5.6" in meta["dependencies"][0]
+        finally:
+            os.chdir(original_cwd)
+
 
 class TestBuildWheel:
     """Tests for build_wheel function."""
@@ -391,6 +541,57 @@ class TestBuildWheel:
                 wheel_name = rind.build_wheel(wheel_dir)
 
                 assert "2.0.0" in wheel_name
+        finally:
+            os.chdir(original_cwd)
+
+    def test_wheel_full_metadata(self, temp_project_full_metadata):
+        """Test wheel with string license, classifiers, and keywords list."""
+        import rind
+
+        meta_dir = temp_project_full_metadata / "meta"
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            with tempfile.TemporaryDirectory() as wheel_dir:
+                wheel_name = rind.build_wheel(wheel_dir)
+                wheel_path = Path(wheel_dir) / wheel_name
+
+                with zipfile.ZipFile(wheel_path) as whl:
+                    for name in whl.namelist():
+                        if "METADATA" in name:
+                            metadata = whl.read(name).decode("utf-8")
+                            break
+
+                # License as string (not dict)
+                assert "License: MIT" in metadata
+                # Classifiers
+                assert "Classifier: Development Status :: 4 - Beta" in metadata
+                assert "Classifier: License :: OSI Approved :: MIT License" in metadata
+                # Keywords as list joined with comma
+                assert "Keywords: test,package" in metadata
+        finally:
+            os.chdir(original_cwd)
+
+    def test_wheel_keywords_string(self, temp_project_keywords_string):
+        """Test wheel with keywords as comma-separated string."""
+        import rind
+
+        meta_dir = temp_project_keywords_string / "meta"
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            with tempfile.TemporaryDirectory() as wheel_dir:
+                wheel_name = rind.build_wheel(wheel_dir)
+                wheel_path = Path(wheel_dir) / wheel_name
+
+                with zipfile.ZipFile(wheel_path) as whl:
+                    for name in whl.namelist():
+                        if "METADATA" in name:
+                            metadata = whl.read(name).decode("utf-8")
+                            break
+
+                # Keywords kept as string
+                assert "Keywords: test, package, example" in metadata
         finally:
             os.chdir(original_cwd)
 
@@ -528,6 +729,15 @@ class TestVersionHelpers:
         assert "pyproject_hooks" in reqs
         assert "flit_core>=3.0" in reqs
 
+    def test_get_version_via_backend_no_backend(self):
+        """Test error when build-backend is not specified."""
+        from pathlib import Path
+
+        from rind._version_helpers import _get_version_via_backend
+
+        with pytest.raises(ValueError, match="no build-backend specified"):
+            _get_version_via_backend(Path("."), {})
+
 
 class TestGetRequires:
     """Tests for get_requires_for_build_* functions."""
@@ -542,6 +752,35 @@ class TestGetRequires:
             os.chdir(meta_dir)
             reqs = rind.get_requires_for_build_wheel()
             assert "setuptools_scm>=8.0" in reqs
+        finally:
+            os.chdir(original_cwd)
+
+    def test_get_requires_for_build_wheel_from_sdist(self, temp_project_static):
+        """Test build requirements for wheel when building from sdist (cached)."""
+        import json
+
+        import rind
+        from rind._metadata import CACHED_BUILD_INFO_FILE
+
+        meta_dir = temp_project_static / "meta"
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            # Create a cache file to simulate building from sdist
+            cache_data = {
+                "version": "2.0.0",
+                "core_project": {"name": "mypackage-core"},
+            }
+            with open(CACHED_BUILD_INFO_FILE, "w") as f:
+                json.dump(cache_data, f)
+
+            try:
+                reqs = rind.get_requires_for_build_wheel()
+                # When building from sdist with cached info, no deps needed
+                assert reqs == []
+            finally:
+                # Clean up
+                Path(CACHED_BUILD_INFO_FILE).unlink(missing_ok=True)
         finally:
             os.chdir(original_cwd)
 
@@ -628,7 +867,7 @@ name = "mypackage"
             os.chdir(original_cwd)
 
     def test_missing_name(self, tmp_path):
-        """Test error when name is not specified."""
+        """Test error when metapackage name is not specified."""
         from rind._metadata import build_metadata
 
         # Create core package without name
@@ -658,6 +897,44 @@ core-path = "../core"
         try:
             os.chdir(meta_dir)
             with pytest.raises(ValueError, match="Package name must be specified"):
+                build_metadata()
+        finally:
+            os.chdir(original_cwd)
+
+    def test_missing_core_package_name(self, tmp_path):
+        """Test error when core package name is not specified."""
+        from rind._metadata import build_metadata
+
+        # Create core package without name in [project]
+        core_dir = tmp_path / "core"
+        core_dir.mkdir()
+        (core_dir / "pyproject.toml").write_text("""\
+[project]
+version = "1.0.0"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+""")
+
+        meta_dir = tmp_path / "meta"
+        meta_dir.mkdir()
+        (meta_dir / "pyproject.toml").write_text("""\
+[build-system]
+requires = ["rind"]
+build-backend = "rind"
+
+[tool.rind]
+core-path = "../core"
+name = "mypackage"
+""")
+
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            with pytest.raises(
+                ValueError, match="Could not determine core package name"
+            ):
                 build_metadata()
         finally:
             os.chdir(original_cwd)
