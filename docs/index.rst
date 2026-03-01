@@ -31,31 +31,32 @@ not required dependencies) is to make use of extras, e.g.::
 
     pip install mypackage[recommended]
 
-Howwever, putting recommended dependencies behind extras places a burden on
-typical users to discover and use this syntax. But making them required
+However, putting recommended dependencies behind extras places a burden on
+typical users to discover and use this syntax, while making them required
 penalizes advanced users who need lean installations.
 
-Projects may decide that using extras is not sufficient, and one solution is to
-distribute two packages: a core package with minimal dependencies (e.g.,
-``mypackage-core``) and a metapackage (e.g., ``mypackage``) that depends on the
-core and adds recommended dependencies.
+Some projects may decide that using extras is not sufficient for their needs,
+and instead distribute two packages: a core package with minimal dependencies
+(e.g., ``mypackage-core``) and a metapackage (e.g., ``mypackage``) that depends
+on the core and adds recommended dependencies.
 
-The **rind** build backend is designed to significanly lower the maintenance burden
-for projects that do want to provide two packages rather than relying on extras.
+The **rind** build backend is designed to significantly lower the maintenance
+burden for projects that choose to provide two packages.
 
 .. note::
 
-    This is not to say that the pattern of splitting packages should always
-    be used instead of extras for recommended dependencies. Package maintainers
-    should make their own decisions as to what approach to use, and **rind** is
-    provided to help with the split package scenario.
+    Splitting a package is not inherently better than using extras for
+    recommended dependencies—it depends on your project's needs and user base.
+    **rind** simply makes the split-package approach easier for projects that
+    choose it.
 
 Key Features
 ------------
 
 - **Zero Python code**: Output wheels for the metapackage contain only ``.dist-info/`` metadata
-- **Automatic versioning**: ``mypackage==1.2.3`` always installs
-  ``mypackage-core==1.2.3``, and the metapackage version automatically matches the core package version.
+- **Automatic versioning**: The metapackage version is derived from the core
+  package at build time—no manual updates needed. Integrates with dynamic
+  versioning tools like setuptools-scm and hatch-vcs.
 - **Metadata inheritance**: Reuse authors, license, URLs from the core package
 - **Selective extras**: Choose which extras to make required, which to pass through, and which to hide
 - **Single repository**: Both packages live in the same repository
