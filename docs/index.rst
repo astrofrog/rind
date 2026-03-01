@@ -53,26 +53,21 @@ burden for projects that choose to provide two packages.
 Key Features
 ------------
 
-- **Zero Python code**: Output wheels for the metapackage contain only ``.dist-info/`` metadata
+- **Zero Python code**: The metapackage contains only metadata—no source files,
+  just ``.dist-info/``.
 - **Automatic versioning**: The metapackage version is derived from the core
   package at build time—no manual updates needed. Integrates with dynamic
   versioning tools like setuptools-scm and hatch-vcs.
 - **Version pinning**: The metapackage pins to the exact core version, so
   ``mypackage==1.2.3`` always installs ``mypackage-core==1.2.3``.
-- **Metadata inheritance**: Reuse authors, license, URLs from the core package
-- **Selective extras**: Choose which extras to make required, which to pass through, and which to hide
-- **Single repository**: Both packages live in the same repository
-- **Minimal changes to existing package**: The core package can continue living at the root of the repository.
-
-Why is this called rind?
-------------------------
-
-A pineapple has a tough **core**, sweet **flesh**, and a **rind** that wraps it
-all up. Your package can be the same: a lean core, optional dependencies which
-add tasty functionality (the flesh), and a metapackage to bundle them together
-(the rind) — so users get the whole fruit with just ``pip install mypackage``.
-The ``rind`` backend makes it easy. Enough with the terrible metaphors? Let's
-dive in!
+- **Metadata inheritance**: Authors, license, URLs, and other metadata are
+  automatically pulled from the core package.
+- **Selective extras**: Control which extras become required dependencies, which
+  pass through unchanged, and which are hidden.
+- **Single repository**: Both packages live in the same repo—no need to manage
+  separate repositories or release workflows.
+- **Minimal changes**: The core package stays at the repository root; just add a
+  small ``pyproject.toml`` in a subdirectory for the metapackage.
 
 Quick Example
 -------------
@@ -102,6 +97,18 @@ Then build both packages:
 
    $ python -m build .        # Build mypackage-core
    $ python -m build meta/    # Build mypackage (metapackage)
+
+The result: ``pip install mypackage`` gives users the full experience with all
+recommended dependencies, while ``pip install mypackage-core`` remains available
+for those who need a minimal installation.
+
+Why is this called rind?
+------------------------
+
+A pineapple has a tough **core**, sweet **flesh**, and a **rind** that wraps it
+all up. Your package can be the same: a lean core, optional dependencies which
+add tasty functionality (the flesh), and a metapackage to bundle them together
+(the rind)—so users get the whole fruit with just ``pip install mypackage``.
 
 Contents
 --------
