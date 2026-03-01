@@ -10,7 +10,7 @@ except ImportError:
     __version__ = "0.0.0"
 
 # PEP 517 build backend hooks
-from ._backend import (
+from ._hooks import (
     build_sdist,
     build_wheel,
     get_requires_for_build_sdist,

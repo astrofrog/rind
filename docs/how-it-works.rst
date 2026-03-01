@@ -52,9 +52,15 @@ this wheel, it:
 Version Pinning
 ---------------
 
-rind uses `setuptools_scm <https://github.com/pypa/setuptools_scm>`_ to determine
-the metapackage version from git tags. **Your core package must also use
-setuptools_scm** for version pinning to work correctly.
+rind automatically uses whatever versioning system your core package uses.
+It reads the core package's ``pyproject.toml`` and detects:
+
+- **Static versions**: If ``version`` is in ``[project]`` and not in ``dynamic``,
+  it's used directly.
+- **setuptools_scm / hatch-vcs**: If detected in build requirements or tool config,
+  rind calls setuptools_scm directly for fast version detection.
+- **Other backends**: As a fallback, rind calls the core's build backend via
+  ``prepare_metadata_for_build_wheel`` to get the version.
 
 When you tag a release and build both packages:
 
@@ -64,8 +70,7 @@ When you tag a release and build both packages:
    $ python -m build .        # In repo root
    $ python -m build meta/    # In meta/ directory
 
-Both builds call ``setuptools_scm.get_version()`` which reads the same git tag,
-so both get version ``1.2.3``.
+Both builds use the same version source, so both get version ``1.2.3``.
 
 The metapackage's ``METADATA`` file contains:
 
@@ -84,9 +89,9 @@ This ensures that ``pip install mypackage==1.2.3`` always installs
 Metadata Inheritance
 --------------------
 
-When ``inherit-metadata`` is specified, the backend:
+When ``inherit-metadata`` is true (the default), the backend:
 
-1. Reads the parent ``pyproject.toml``
+1. Reads the core package's ``pyproject.toml`` (via ``core-path``)
 2. Extracts the ``[project]`` table
 3. Uses those values as defaults for the metapackage
 
@@ -94,20 +99,24 @@ The inheritance priority is:
 
 1. ``[tool.rind]`` values (highest priority)
 2. ``[project]`` values in the metapackage's own ``pyproject.toml``
-3. Inherited values from parent ``pyproject.toml`` (lowest priority)
+3. Inherited values from core's ``pyproject.toml`` (lowest priority)
 
-sdist and Inheritance
-~~~~~~~~~~~~~~~~~~~~~
+Set ``inherit-metadata = false`` to disable this behavior and only use the
+core's pyproject.toml for version detection.
 
-When building a wheel from an sdist, the parent ``pyproject.toml`` isn't
+sdist and Caching
+~~~~~~~~~~~~~~~~~
+
+When building a wheel from an sdist, the core package's ``pyproject.toml`` isn't
 available (the sdist is extracted to a temporary directory).
 
-To handle this, the backend caches the inherited metadata:
+To handle this, the backend caches build information:
 
-1. During ``build_sdist``, inherited metadata is saved to ``.rind_inherited.json``
+1. During ``build_sdist``, the version and core project metadata are saved to
+   ``.rind_cache.json``
 2. This file is included in the sdist
 3. During ``build_wheel``, the backend first checks for this cache file
-4. If found, it uses the cached values instead of reading the parent file
+4. If found, it uses the cached values instead of re-detecting
 
 This ensures wheels built from sdists have the same metadata as wheels built
 directly from the repository.
@@ -176,12 +185,8 @@ approach is better because:
 Limitations
 -----------
 
-- **Both packages must be released together**: Since versions are synchronized
-  via git tags, you can't release one without the other.
-
-- **setuptools_scm is required for both packages**: Both the core package and
-  the metapackage must use setuptools_scm for version detection. This ensures
-  that versions stay synchronized when built from the same git tag.
+- **Both packages must be released together**: Since versions are synchronized,
+  you can't release one without the other.
 
 - **No code in metapackage**: The metapackage cannot contain any Python code.
   If you need wrapper code, it should go in the core package.
