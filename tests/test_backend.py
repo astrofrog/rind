@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import sys
 import tarfile
 import tempfile
 import zipfile
@@ -471,6 +472,43 @@ class TestBuildMetadata:
         finally:
             os.chdir(original_cwd)
 
+    def test_build_metadata_from_sdist(self, temp_project_static):
+        """Test build_metadata uses cached info when building from extracted sdist."""
+        import rind
+        from rind._metadata import build_metadata
+
+        meta_dir = temp_project_static / "meta"
+        original_cwd = os.getcwd()
+        try:
+            # Build sdist from the meta package
+            os.chdir(meta_dir)
+            with tempfile.TemporaryDirectory() as sdist_dir:
+                sdist_name = rind.build_sdist(sdist_dir)
+                sdist_path = Path(sdist_dir) / sdist_name
+
+                # Extract sdist to a new location (simulating pip download)
+                extract_dir = temp_project_static / "extracted"
+                with tarfile.open(sdist_path, "r:gz") as tar:
+                    if sys.version_info >= (3, 12):
+                        tar.extractall(extract_dir, filter="data")
+                    else:
+                        tar.extractall(extract_dir)
+
+                # Find the extracted directory
+                extracted = list(extract_dir.iterdir())[0]
+
+                # Now build metadata from within extracted sdist
+                # (no access to core pyproject.toml - must use cache)
+                os.chdir(extracted)
+                meta = build_metadata()
+
+                # Should use cached values from sdist
+                assert meta["version"] == "2.0.0"
+                assert meta["core_package"] == "mypackage-core"
+                assert meta["metadata_fields"]["requires-python"] == ">=3.9"
+        finally:
+            os.chdir(original_cwd)
+
 
 class TestBuildWheel:
     """Tests for build_wheel function."""
@@ -757,30 +795,34 @@ class TestGetRequires:
 
     def test_get_requires_for_build_wheel_from_sdist(self, temp_project_static):
         """Test build requirements for wheel when building from sdist (cached)."""
-        import json
-
         import rind
-        from rind._metadata import CACHED_BUILD_INFO_FILE
 
         meta_dir = temp_project_static / "meta"
         original_cwd = os.getcwd()
         try:
+            # Build sdist from the meta package
             os.chdir(meta_dir)
-            # Create a cache file to simulate building from sdist
-            cache_data = {
-                "version": "2.0.0",
-                "core_project": {"name": "mypackage-core"},
-            }
-            with open(CACHED_BUILD_INFO_FILE, "w") as f:
-                json.dump(cache_data, f)
+            with tempfile.TemporaryDirectory() as sdist_dir:
+                sdist_name = rind.build_sdist(sdist_dir)
+                sdist_path = Path(sdist_dir) / sdist_name
 
-            try:
+                # Extract sdist to a new location (simulating pip download)
+                extract_dir = temp_project_static / "extracted_for_reqs"
+                with tarfile.open(sdist_path, "r:gz") as tar:
+                    if sys.version_info >= (3, 12):
+                        tar.extractall(extract_dir, filter="data")
+                    else:
+                        tar.extractall(extract_dir)
+
+                # Find the extracted directory
+                extracted = list(extract_dir.iterdir())[0]
+
+                # Call get_requires_for_build_wheel from within extracted sdist
+                os.chdir(extracted)
                 reqs = rind.get_requires_for_build_wheel()
+
                 # When building from sdist with cached info, no deps needed
                 assert reqs == []
-            finally:
-                # Clean up
-                Path(CACHED_BUILD_INFO_FILE).unlink(missing_ok=True)
         finally:
             os.chdir(original_cwd)
 
