@@ -860,7 +860,9 @@ name = "mypackage"
         original_cwd = os.getcwd()
         try:
             os.chdir(meta_dir)
-            with pytest.raises(ValueError, match="Could not determine core package name"):
+            with pytest.raises(
+                ValueError, match="Could not determine core package name"
+            ):
                 build_metadata()
         finally:
             os.chdir(original_cwd)
