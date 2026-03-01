@@ -28,7 +28,7 @@ Requirements
 ------------
 
 - Python 3.9 or later
-- setuptools_scm (for version detection from git tags)
 
-The backend automatically declares ``setuptools_scm`` as a build dependency,
-so you don't need to add it to your ``build-system.requires``.
+rind automatically determines what additional build dependencies it needs
+based on your core package's versioning system. You don't need to add
+anything to your ``build-system.requires`` beyond ``rind`` itself.

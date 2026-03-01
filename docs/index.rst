@@ -42,8 +42,8 @@ approach comes with maintenance challenges:
 - Extras might need to be re-exposed in the metapackage if you want to keep them optional
 
 **rind eliminates this burden** by letting you define a metapackage in the same
-repository as your core package, and will handle automatic version pinning,
-metadata inheritance, and passing
+repository as your core package. It handles automatic version pinning,
+metadata inheritance, and extras passthrough.
 
 It does not require you to switch fully to a monorepo-style layout - you can
 keep your main package as the primary package at the root of the repository, and
