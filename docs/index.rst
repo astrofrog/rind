@@ -108,7 +108,7 @@ Why is this called rind?
 A pineapple has a tough **core**, sweet **flesh**, and a **rind** that wraps it
 all up. Your package can be the same: a lean core, optional dependencies which
 add tasty functionality (the flesh), and a metapackage to bundle them together
-(the rind)—so users get the whole fruit with just ``pip install mypackage``.
+(the rind)—so users get the whole fruit with just ``pip install mypackage``!
 
 Contents
 --------
