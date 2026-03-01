@@ -10,18 +10,24 @@ A minimal `PEP 517 <https://peps.python.org/pep-0517/>`_ build backend to make
 it easy to create a **metapackage** that extends
 a core package by installing additional dependencies.
 
-**core | kɔː |**
-*noun*:
-the tough central part of various fruits, containing the seeds
-
-**rind | rʌɪnd |**
-*noun*:
-the  outer skin of certain fruit, especially citrus fruit
-
 .. note::
 
    A metapackage is a package that exists solely to aggregate dependencies.
    When installed, it pulls in other packages but provides no code of its own.
+
+What's with the name?
+---------------------
+
+Some fruits such as pineapples have a tough **core**, sweet flesh, and a
+**rind** that wraps it all up. Your package can be the same: a lean core users
+can install with e.g. ``pip install mypackage-core``, optional dependencies
+which add tasty functionality (the flesh), and a metapackage to bundle them
+together (the rind) — so users get the whole fruit with e.g. ``pip install
+mypackage``.
+
+The ``rind`` backend makes maintaining the metapackage easy.
+
+Enough with the terrible metaphors? Let's dive in!
 
 Why use rind?
 -------------
