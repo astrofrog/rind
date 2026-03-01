@@ -40,6 +40,7 @@ docs = [
 ]
 test = [
     "pytest>=7.0",
+    "pytest-cov",
     "build",
     "setuptools_scm>=8",
 ]

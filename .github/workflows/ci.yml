@@ -11,6 +11,7 @@ jobs:
   test:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
+      coverage: codecov
       envs: |
         - linux: py39-test
         - linux: py311-test
@@ -25,6 +26,8 @@ jobs:
           pytest: false
         - linux: docs
           pytest: false
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build:
     needs: [test]
