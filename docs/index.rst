@@ -15,20 +15,6 @@ a core package by installing additional dependencies.
    A metapackage is a package that exists solely to aggregate dependencies.
    When installed, it pulls in other packages but provides no code of its own.
 
-What's with the name?
----------------------
-
-Some fruits such as pineapples have a tough **core**, sweet flesh, and a
-**rind** that wraps it all up. Your package can be the same: a lean core users
-can install with e.g. ``pip install mypackage-core``, optional dependencies
-which add tasty functionality (the flesh), and a metapackage to bundle them
-together (the rind) — so users get the whole fruit with e.g. ``pip install
-mypackage``.
-
-The ``rind`` backend makes maintaining the metapackage easy.
-
-Enough with the terrible metaphors? Let's dive in!
-
 Why use rind?
 -------------
 
@@ -52,10 +38,16 @@ approach comes with maintenance challenges:
 
 - Versions must be carefully pinned so that ``mypackage==1.2.3`` installs
   ``mypackage-core==1.2.3``
-- Metadata (versions, authors, license, URLs, extras) must be kept in sync between packages
+- Metadata (versions, authors, license, URLs, etc.) must be kept in sync between packages
+- Extras might need to be re-exposed in the metapackage if you want to keep them optional
 
-**rind eliminates this burden** by letting you publish both packages from a
-single repository with automatic version pinning and metadata inheritance.
+**rind eliminates this burden** by letting you define a metapackage in the same
+repository as your core package, and will handle automatic version pinning,
+metadata inheritance, and passing
+
+It does not require you to switch fully to a monorepo-style layout - you can
+keep your main package as the primary package at the root of the repository, and
+you can include the minimal metadata for the metapackage in a subdirectory.
 
 Key Features
 ------------
@@ -66,6 +58,16 @@ Key Features
 - **Metadata inheritance**: Reuse authors, license, URLs from the core package
 - **Selective extras**: Choose which extras to make required vs. pass through
 - **Single repository**: Both packages live in the same repo, share the same tags
+
+What's with the name?
+---------------------
+
+Some fruits such as pineapples have a tough **core**, sweet flesh, and a
+**rind** that wraps it all up. Your package can be the same: a lean core users
+can install with e.g. ``pip install mypackage-core``, optional dependencies
+which add tasty functionality (the flesh), and a metapackage to bundle them
+together (the rind) — so users get the whole fruit with e.g. ``pip install
+mypackage``. Enough with the terrible metaphor? Let's dive in!
 
 Quick Example
 -------------
