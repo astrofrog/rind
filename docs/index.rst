@@ -57,6 +57,8 @@ Key Features
 - **Automatic versioning**: The metapackage version is derived from the core
   package at build time—no manual updates needed. Integrates with dynamic
   versioning tools like setuptools-scm and hatch-vcs.
+- **Version pinning**: The metapackage pins to the exact core version, so
+  ``mypackage==1.2.3`` always installs ``mypackage-core==1.2.3``.
 - **Metadata inheritance**: Reuse authors, license, URLs from the core package
 - **Selective extras**: Choose which extras to make required, which to pass through, and which to hide
 - **Single repository**: Both packages live in the same repository
