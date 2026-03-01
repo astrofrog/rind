@@ -32,10 +32,7 @@ def _uses_setuptools_scm(pyproject):
     tool = pyproject.get("tool", {})
     if "setuptools_scm" in tool:
         return True
-    if tool.get("hatch", {}).get("version", {}).get("source") == "vcs":
-        return True
-
-    return False
+    return tool.get("hatch", {}).get("version", {}).get("source") == "vcs"
 
 
 def get_version_requires(core_pyproject):

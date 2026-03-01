@@ -41,6 +41,7 @@ docs = [
 test = [
     "pytest>=7.0",
     "build",
+    "setuptools_scm>=8",
 ]
 dev = [
     "ruff>=0.9",

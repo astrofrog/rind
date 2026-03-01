@@ -488,9 +488,7 @@ class TestVersionHelpers:
 
         # hatch-vcs
         assert _uses_setuptools_scm({"build-system": {"requires": ["hatch-vcs"]}})
-        assert _uses_setuptools_scm(
-            {"tool": {"hatch": {"version": {"source": "vcs"}}}}
-        )
+        assert _uses_setuptools_scm({"tool": {"hatch": {"version": {"source": "vcs"}}}})
 
         # Not using it
         assert not _uses_setuptools_scm({"build-system": {"requires": ["setuptools"]}})
