@@ -21,43 +21,45 @@ Why use rind?
 Package maintainers often face a tension between two types of users:
 
 - **Typical users** want recommended dependencies installed by default for the
-  best experience, without needing to know about extras syntax like
-  ``pip install mypackage[recommended]``
+  best experience
 - **Advanced users** (library authors, Docker image builders, CI pipelines) want
   minimal installations to reduce dependency conflicts, image sizes, and install
   times
 
-Putting recommended dependencies behind extras places a burden on typical users
-to discover and use special syntax. But making them required penalizes advanced
-users who need lean installations.
+The recommended way to handle optional dependencies (including recommended but
+not required dependencies) is to make use of extras, e.g.::
 
-One solution is to distribute two packages: a core package with minimal
-dependencies (e.g., ``mypackage-core``) and a metapackage (e.g., ``mypackage``)
-that depends on the core and adds recommended dependencies. However, this
-approach comes with maintenance challenges:
+    pip install mypackage[recommended]
 
-- Versions must be carefully pinned so that ``mypackage==1.2.3`` installs
-  ``mypackage-core==1.2.3``
-- Metadata (versions, authors, license, URLs, etc.) must be kept in sync between packages
-- Extras might need to be re-exposed in the metapackage if you want to keep them optional
+Howwever, putting recommended dependencies behind extras places a burden on
+typical users to discover and use this syntax. But making them required
+penalizes advanced users who need lean installations.
 
-**rind eliminates this burden** by letting you define a metapackage in the same
-repository as your core package. It handles automatic version pinning,
-metadata inheritance, and extras passthrough.
+Projects may decide that using extras is not sufficient, and one solution is to
+distribute two packages: a core package with minimal dependencies (e.g.,
+``mypackage-core``) and a metapackage (e.g., ``mypackage``) that depends on the
+core and adds recommended dependencies.
 
-It does not require you to switch fully to a monorepo-style layout - you can
-keep your main package as the primary package at the root of the repository, and
-you can include the minimal metadata for the metapackage in a subdirectory.
+The **rind** build backend is designed to significanly lower the maintenance burden
+for projects that do want to provide two packages rather than relying on extras.
+
+.. note::
+
+    This is not to say that the pattern of splitting packages should always
+    be used instead of extras for recommended dependencies. Package maintainers
+    should make their own decisions as to what approach to use, and **rind** is
+    provided to help with the split package scenario.
 
 Key Features
 ------------
 
 - **Zero Python code**: Output wheels for the metapackage contain only ``.dist-info/`` metadata
-- **Automatic version pinning**: ``mypackage==1.2.3`` always installs
-  ``mypackage-core==1.2.3``
+- **Automatic versioning**: ``mypackage==1.2.3`` always installs
+  ``mypackage-core==1.2.3``, and the metapackage version automatically matches the core package version.
 - **Metadata inheritance**: Reuse authors, license, URLs from the core package
-- **Selective extras**: Choose which extras to make required vs. pass through
-- **Single repository**: Both packages live in the same repo, share the same tags
+- **Selective extras**: Choose which extras to make required, which to pass through, and which to hide
+- **Single repository**: Both packages live in the same repository
+- **Minimal changes to existing package**: The core package can continue living at the root of the repository.
 
 Why is this called rind?
 ------------------------
