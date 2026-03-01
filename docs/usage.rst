@@ -121,26 +121,10 @@ Create ``meta/pyproject.toml``:
    # Extras to pass through and expose on the metapackage (still optional)
    passthrough-extras = ["test", "docs"]
 
-Step 3: Build Both Packages
----------------------------
+Step 3: Build and Release
+-------------------------
 
-.. code-block:: bash
-
-   # Build the core package
-   $ python -m build .
-
-   # Build the metapackage
-   $ python -m build meta/
-
-This creates:
-
-- ``dist/mypackage_core-1.0.0-py3-none-any.whl``
-- ``meta/dist/mypackage-1.0.0-py3-none-any.whl``
-
-Step 4: Release Together
-------------------------
-
-Both packages should be released simultaneously with the same version:
+Both packages should be built and released simultaneously with the same version:
 
 .. code-block:: bash
 
@@ -148,12 +132,27 @@ Both packages should be released simultaneously with the same version:
    $ git tag v1.0.0
    $ git push --tags
 
-   # Build both
+   # Build the core package
    $ python -m build .
+
+   # Build the metapackage
    $ python -m build meta/
 
    # Upload both to PyPI
    $ twine upload dist/* meta/dist/*
+
+This creates and uploads:
+
+- ``dist/mypackage_core-1.0.0.tar.gz``
+- ``dist/mypackage_core-1.0.0-py3-none-any.whl``
+- ``meta/dist/mypackage-1.0.0.tar.gz``
+- ``meta/dist/mypackage-1.0.0-py3-none-any.whl``
+
+.. note::
+
+   If you use automated CI workflows (e.g., GitHub Actions) for building and
+   releasing packages, you'll need to update them to build and upload both
+   packages.
 
 User Experience
 ---------------
