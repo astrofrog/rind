@@ -7,6 +7,25 @@ table of your ``pyproject.toml``.
 Required Options
 ----------------
 
+core-path
+~~~~~~~~~
+
+**Type:** string (path)
+
+Path to the directory containing your core package's ``pyproject.toml``.
+This is required and tells rind where to find the core package.
+
+.. code-block:: toml
+
+   [tool.rind]
+   core-path = ".."
+
+The core package's ``pyproject.toml`` is used to:
+
+- Determine the version (using whatever versioning system the core uses)
+- Get the core package name (from ``[project] name``)
+- Inherit metadata fields like authors, license, URLs (if ``inherit-metadata`` is true)
+
 name
 ~~~~
 
@@ -26,17 +45,10 @@ Inheritance Options
 inherit-metadata
 ~~~~~~~~~~~~~~~~
 
-**Type:** string (path)
+**Type:** boolean (default: ``true``)
 
-Path to a ``pyproject.toml`` file to inherit metadata from. Usually points to
-the core package's configuration.
-
-.. code-block:: toml
-
-   [tool.rind]
-   inherit-metadata = "../pyproject.toml"
-
-When specified, the following fields are inherited (unless overridden):
+Whether to inherit metadata fields from the core package. When true, the
+following fields are inherited (unless overridden):
 
 - ``description``
 - ``requires-python``
@@ -46,29 +58,22 @@ When specified, the following fields are inherited (unless overridden):
 - ``classifiers``
 - ``keywords``
 
-.. note::
-
-   The inherited metadata is cached in the sdist, so wheels can be built from
-   the sdist without access to the parent ``pyproject.toml``.
-
-Dependency Options
-------------------
-
-core-package
-~~~~~~~~~~~~
-
-**Type:** string
-
-The name of the core package to depend on. If not specified, defaults to the
-``name`` from inherited metadata (requires ``inherit-metadata`` to be set).
-
-If neither ``core-package`` nor ``inherit-metadata`` is specified, an error
-is raised.
-
 .. code-block:: toml
 
    [tool.rind]
-   core-package = "mypackage-core"
+   # Inherit metadata (default)
+   inherit-metadata = true
+
+   # Or disable inheritance
+   inherit-metadata = false
+
+.. note::
+
+   The inherited metadata is cached in the sdist, so wheels can be built from
+   the sdist without access to the core package's ``pyproject.toml``.
+
+Dependency Options
+------------------
 
 include-extras
 ~~~~~~~~~~~~~~
@@ -180,24 +185,6 @@ takes precedence:
    # This takes highest precedence
    description = "Override description"
 
-Version Options
----------------
-
-version-root
-~~~~~~~~~~~~
-
-**Type:** string (path)
-
-Root directory for setuptools_scm version detection. Defaults to ``".."``
-(parent directory), which works when the metapackage is in a subdirectory.
-
-.. code-block:: toml
-
-   [tool.rind]
-   version-root = ".."
-
-If your metapackage is at the repository root (unusual), set this to ``"."``.
-
 Complete Example
 ----------------
 
@@ -210,15 +197,12 @@ Here's a complete ``pyproject.toml`` for a metapackage:
    build-backend = "rind"
 
    [tool.rind]
-   # Inherit from core package
-   inherit-metadata = "../pyproject.toml"
+   # Path to core package directory (required)
+   core-path = ".."
 
    # Meta-package identity
    name = "mypackage"
    description = "My package with batteries included"
-
-   # Core package (auto-detected from inheritance, but can override)
-   # core-package = "mypackage-core"
 
    # Make these extras required
    include-extras = ["recommended", "performance"]

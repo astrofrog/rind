@@ -59,15 +59,15 @@ Key Features
 - **Selective extras**: Choose which extras to make required vs. pass through
 - **Single repository**: Both packages live in the same repo, share the same tags
 
-What's with the name?
----------------------
+Why is this called rind?
+------------------------
 
-Some fruits such as pineapples have a tough **core**, sweet flesh, and a
-**rind** that wraps it all up. Your package can be the same: a lean core users
-can install with e.g. ``pip install mypackage-core``, optional dependencies
-which add tasty functionality (the flesh), and a metapackage to bundle them
-together (the rind) — so users get the whole fruit with e.g. ``pip install
-mypackage``. Enough with the terrible metaphor? Let's dive in!
+A pineapple has a tough **core**, sweet **flesh**, and a **rind** that wraps it
+all up. Your package can be the same: a lean core, optional dependencies which
+add tasty functionality (the flesh), and a metapackage to bundle them together
+(the rind) — so users get the whole fruit with just ``pip install mypackage``.
+The ``rind`` backend makes it easy. Enough with the terrible metaphors? Let's
+dive in!
 
 Quick Example
 -------------
@@ -86,7 +86,7 @@ metapackage:
    build-backend = "rind"
 
    [tool.rind]
-   inherit-metadata = "../pyproject.toml"
+   core-path = ".."
    name = "mypackage"
    include-extras = ["recommended"]
    passthrough-extras = ["test", "docs"]

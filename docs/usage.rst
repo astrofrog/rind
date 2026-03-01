@@ -6,11 +6,14 @@ This guide walks through setting up a metapackage for an existing project.
 Prerequisites
 -------------
 
-rind uses `setuptools_scm <https://github.com/pypa/setuptools_scm>`_ to
-determine the package version from git tags. **Your core package must also use
-setuptools_scm** for version pinning to work correctly.
+rind automatically detects and uses whatever versioning system your core package
+uses. It supports:
 
-Both packages will get their version from the same git tag, ensuring that
+- **Static versions** in ``pyproject.toml`` (no dependencies needed)
+- **setuptools_scm** or **hatch-vcs** for git tag-based versioning
+- **Any PEP 517 backend** as a fallback (calls the backend's metadata hook)
+
+Both packages will get their version from the same source, ensuring that
 ``mypackage==1.2.3`` always installs ``mypackage-core==1.2.3``.
 
 Repository Structure
@@ -95,8 +98,8 @@ Create ``meta/pyproject.toml``:
    build-backend = "rind"
 
    [tool.rind]
-   # Inherit metadata from core package
-   inherit-metadata = "../pyproject.toml"
+   # Path to core package directory
+   core-path = ".."
 
    # This is the metapackage name
    name = "mypackage"
