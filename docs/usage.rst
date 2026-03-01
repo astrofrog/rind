@@ -45,7 +45,7 @@ or if you use the ``src`` layout for the main package:
 Step 1: Configure the Core Package
 ----------------------------------
 
-In your root ``pyproject.toml``, change the package name to include ``-core``
+In your root ``pyproject.toml``, change the package name to include e.g. ``-core``
 and configure setuptools_scm for versioning:
 
 .. code-block:: toml
@@ -62,7 +62,7 @@ and configure setuptools_scm for versioning:
 
    [tool.setuptools_scm]
 
-Organize dependencies into the minimal required set plus optional extras:
+Make sure dependencies are organized into the minimal required set plus optional extras:
 
 .. code-block:: toml
 
@@ -85,6 +85,14 @@ Organize dependencies into the minimal required set plus optional extras:
 
    The import name stays the same! Users still write ``import mypackage``,
    even though the package is now named ``mypackage-core`` on PyPI.
+
+.. note::
+
+   You can technically choose to not rename your core package and give your
+   metapackage a different name (say ``mypackage-all``), although for
+   established packages users will still need to discover the new metapackage
+   name, which may not be much of an improvement compared to discovering extras.
+   But it is your choice!
 
 Step 2: Create the Meta-Package
 -------------------------------
