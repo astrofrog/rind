@@ -69,8 +69,8 @@ following fields are inherited (unless overridden):
 
 .. note::
 
-   The inherited metadata is cached in the sdist, so wheels can be built from
-   the sdist without access to the core package's ``pyproject.toml``.
+   The inherited metadata is resolved and stored in the sdist's ``pyproject.toml``,
+   so wheels can be built from the sdist without access to the core package.
 
 Dependency Options
 ------------------

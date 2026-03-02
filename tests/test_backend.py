@@ -676,7 +676,10 @@ class TestBuildSdist:
                 assert pyproject["project"]["requires-python"] == ">=3.9"
                 assert pyproject["tool"]["rind"]["core-package"] == "mypackage-core"
                 # Should have resolved dependencies
-                assert "mypackage-core[extra1,extra2]==1.2.3" in pyproject["project"]["dependencies"]
+                assert (
+                    "mypackage-core[extra1,extra2]==1.2.3"
+                    in pyproject["project"]["dependencies"]
+                )
                 # Should NOT have core-path (that's only for source builds)
                 assert "core-path" not in pyproject["tool"]["rind"]
         finally:
@@ -711,7 +714,10 @@ class TestBuildSdist:
                 # Keywords as list
                 assert pyproject["project"]["keywords"] == ["test", "package"]
                 # Classifiers
-                assert "Development Status :: 4 - Beta" in pyproject["project"]["classifiers"]
+                assert (
+                    "Development Status :: 4 - Beta"
+                    in pyproject["project"]["classifiers"]
+                )
         finally:
             os.chdir(original_cwd)
 

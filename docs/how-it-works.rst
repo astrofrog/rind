@@ -104,22 +104,22 @@ The inheritance priority is:
 Set ``inherit-metadata = false`` to disable this behavior and only use the
 core's pyproject.toml for version detection.
 
-sdist and Caching
-~~~~~~~~~~~~~~~~~
+Sdist Structure
+~~~~~~~~~~~~~~~
 
 When building a wheel from an sdist, the core package's ``pyproject.toml`` isn't
 available (the sdist is extracted to a temporary directory).
 
-To handle this, the backend caches build information:
+To handle this, rind generates a **resolved** ``pyproject.toml`` in the sdist:
 
-1. During ``build_sdist``, the version and core project metadata are saved to
-   ``.rind_cache.json``
-2. This file is included in the sdist
-3. During ``build_wheel``, the backend first checks for this cache file
-4. If found, it uses the cached values instead of re-detecting
+1. During ``build_sdist``, all metadata is computed from the core package
+2. A new ``pyproject.toml`` is generated with all values hardcoded (version,
+   dependencies, inherited metadata, etc.)
+3. This resolved file has no ``core-path`` setting, which tells rind to read
+   values directly from ``[project]`` instead of computing them
 
 This ensures wheels built from sdists have the same metadata as wheels built
-directly from the repository.
+directly from the repository, without needing access to the core package.
 
 Import Name vs Package Name
 ---------------------------
