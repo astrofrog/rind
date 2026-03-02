@@ -70,9 +70,7 @@ def _build_metadata_from_source(pyproject, tool_config, local_project):
     else:
         core_dep = f"{core_package}=={version}"
 
-    # Collect all dependencies: core package + any additional
     dependencies = [core_dep]
-    dependencies.extend(tool_config.get("additional-dependencies", []))
 
     # Build passthrough extras - these re-expose core package extras
     # with the same pinned version. Use ["*"] to pass through all extras

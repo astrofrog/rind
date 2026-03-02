@@ -149,21 +149,6 @@ metapackage structure.
    means you don't need to carefully exclude ``include-extras`` from your
    passthrough list.
 
-additional-dependencies
-~~~~~~~~~~~~~~~~~~~~~~~
-
-**Type:** list of strings
-
-Additional dependencies beyond the core package. Use standard PEP 508 syntax.
-
-.. code-block:: toml
-
-   [tool.rind]
-   additional-dependencies = [
-       "some-other-package>=2.0",
-       "another-package[extra]>=1.5",
-   ]
-
 Metadata Overrides
 ------------------
 
@@ -219,11 +204,6 @@ Here's a complete ``pyproject.toml`` for a metapackage:
 
    # Pass through all extras for backward compatibility
    passthrough-extras = ["*"]
-
-   # Add extra dependencies not in core
-   additional-dependencies = [
-       "rich>=13.0",  # Nice CLI output
-   ]
 
 .. _standalone-mode:
 
