@@ -19,8 +19,14 @@ from ._utils import (
 )
 
 
-def _is_sdist_mode():
-    """Check if we're building from an sdist (no core-path present)."""
+def _is_standalone_mode():
+    """
+    Check if we're in standalone mode (no core-path present).
+
+    This is true when either:
+    - Building from an sdist (core-path was resolved and removed)
+    - Using standalone mode (no core package, dependencies in [project])
+    """
     pyproject = parse_pyproject()
     tool_config = pyproject.get("tool", {}).get("rind", {})
     return not tool_config.get("core-path")
@@ -30,14 +36,14 @@ def get_requires_for_build_wheel(config_settings=None):
     """Return build dependencies for wheel.
 
     The dependencies depend on how the core package determines its version:
-    - Sdist mode (no core-path): no extra deps needed, version is in [project]
+    - Standalone mode (no core-path): no extra deps needed, version is in [project]
     - Static version: no extra deps needed
     - setuptools_scm/hatch-vcs: needs setuptools_scm
     - Other backends: needs pyproject_hooks + core's build deps
     """
-    # Check if we're building from an sdist
-    if _is_sdist_mode():
-        # Building from sdist - version is in [project], no deps needed
+    # Check if we're in standalone mode (no core package)
+    if _is_standalone_mode():
+        # Standalone or sdist mode - version is in [project], no deps needed
         return []
 
     # Building from source - determine what we need for version detection
@@ -57,6 +63,11 @@ def get_requires_for_build_sdist(config_settings=None):
 
     Same logic as wheel - we need to determine the version.
     """
+    # Check if we're in standalone mode (no core package)
+    if _is_standalone_mode():
+        # Standalone mode - version must be in [project], no deps needed
+        return []
+
     pyproject = parse_pyproject()
     tool_config = pyproject.get("tool", {}).get("rind", {})
 

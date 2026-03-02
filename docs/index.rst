@@ -68,6 +68,7 @@ Key Features
   separate repositories or release workflows.
 - **Minimal changes**: The core package stays at the repository root; just add a
   small ``pyproject.toml`` in a subdirectory for the metapackage.
+- **Standalone mode**: Can also create dependency bundles without a core package.
 
 Quick Example
 -------------

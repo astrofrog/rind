@@ -4,8 +4,11 @@ Configuration Reference
 All configuration for rind goes in the ``[tool.rind]``
 table of your ``pyproject.toml``.
 
-Required Options
-----------------
+Core Package Options
+--------------------
+
+These options are used when wrapping a core package. For standalone metapackages
+(dependency bundles without a core package), see :ref:`standalone-mode` below.
 
 core-path
 ~~~~~~~~~
@@ -13,7 +16,7 @@ core-path
 **Type:** string (path)
 
 Path to the directory containing your core package's ``pyproject.toml``.
-This is required and tells rind where to find the core package.
+This tells rind where to find the core package.
 
 .. code-block:: toml
 
@@ -26,18 +29,25 @@ The core package's ``pyproject.toml`` is used to:
 - Get the core package name (from ``[project] name``)
 - Inherit metadata fields like authors, license, URLs (if ``inherit-metadata`` is true)
 
+.. note::
+
+   If ``core-path`` is not specified, rind operates in **standalone mode** where
+   all metadata must be provided directly in ``[project]``.
+
 name
 ~~~~
 
 **Type:** string
 
-The name of the metapackage. This is required and must be different from the
-core package name.
+The name of the metapackage. Required when using ``core-path``. Must be different
+from the core package name.
 
 .. code-block:: toml
 
    [tool.rind]
    name = "mypackage"
+
+In standalone mode, specify the name in ``[project]`` instead.
 
 Inheritance Options
 -------------------
@@ -214,3 +224,41 @@ Here's a complete ``pyproject.toml`` for a metapackage:
    additional-dependencies = [
        "rich>=13.0",  # Nice CLI output
    ]
+
+.. _standalone-mode:
+
+Standalone Mode
+---------------
+
+rind can also create metapackages without a core package. This is useful for
+creating curated dependency bundles (e.g., "my-data-science-stack").
+
+In standalone mode, omit ``core-path`` and specify all metadata directly in
+``[project]``:
+
+.. code-block:: toml
+
+   [build-system]
+   requires = ["rind"]
+   build-backend = "rind"
+
+   [project]
+   name = "my-data-science-stack"
+   version = "1.0.0"
+   description = "A curated collection of data science packages"
+   requires-python = ">=3.9"
+   dependencies = [
+       "pandas>=2.0",
+       "numpy>=1.24",
+       "matplotlib>=3.7",
+   ]
+
+   [project.optional-dependencies]
+   ml = ["scikit-learn>=1.3", "tensorflow>=2.13"]
+
+Key differences from core-package mode:
+
+- Version must be static (specified directly in ``[project]``)
+- No metadata inheritance (everything in ``[project]``)
+- No ``include-extras`` or ``passthrough-extras`` (define extras directly)
+- No automatic version pinning

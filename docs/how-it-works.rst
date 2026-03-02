@@ -182,11 +182,28 @@ approach is better because:
 - Single source of truth for metadata
 - Easier CI/CD setup
 
+Standalone Mode
+---------------
+
+rind also supports a **standalone mode** for creating metapackages without a
+core package. In this mode:
+
+- All metadata is specified directly in ``[project]``
+- No ``core-path`` is needed
+- Version must be static (no dynamic versioning)
+- No metadata inheritance
+
+This is useful for creating curated dependency bundles like
+"my-data-science-stack" that group related packages together.
+
 Limitations
 -----------
 
-- **Both packages must be released together**: Since versions are synchronized,
-  you can't release one without the other.
+- **Both packages must be released together** (core-package mode only): Since
+  versions are synchronized, you can't release one without the other.
 
 - **No code in metapackage**: The metapackage cannot contain any Python code.
   If you need wrapper code, it should go in the core package.
+
+- **Static version in standalone mode**: Standalone metapackages require a
+  static version in ``[project]``.
