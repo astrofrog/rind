@@ -57,16 +57,23 @@ def record_hash(data):
 
 
 def get_core_pyproject_path(tool_config):
-    """Get the path to the core package's pyproject.toml.
+    """
+    Get the path to the core package's pyproject.toml.
 
-    Args:
-        tool_config: The [tool.rind] configuration dict
+    Parameters
+    ----------
+    tool_config : dict
+        The [tool.rind] configuration dict.
 
-    Returns:
-        Path: Resolved path to core's pyproject.toml
+    Returns
+    -------
+    Path
+        Resolved path to core's pyproject.toml.
 
-    Raises:
-        ValueError: If core-path is not specified
+    Raises
+    ------
+    ValueError
+        If core-path is not specified.
     """
     core_path = tool_config.get("core-path")
     if not core_path:

@@ -10,6 +10,7 @@ requires-python = ">=3.9"
 dependencies = [
     "packaging",
     "tomli; python_version < '3.11'",
+    "tomli-w",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
