@@ -10,6 +10,19 @@ from pathlib import Path
 
 import pytest
 
+
+def _init_git_repo(path, tag):
+    """Initialize a git repo with a tag."""
+    subprocess.run(["git", "init", "-q"], cwd=path, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@test.com"], cwd=path, check=True
+    )
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=path, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=path, check=True)
+    subprocess.run(["git", "tag", tag], cwd=path, check=True)
+
+
 # Sample pyproject.toml content for a core package using setuptools_scm
 CORE_PYPROJECT = """\
 [project]
@@ -214,16 +227,7 @@ def temp_project(tmp_path):
     meta_dir.mkdir()
     (meta_dir / "pyproject.toml").write_text(META_PYPROJECT)
 
-    # Initialize git repo for version detection
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
-    subprocess.run(
-        ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True
-    )
-    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "tag", "v1.2.3"], cwd=tmp_path, check=True)
-
+    _init_git_repo(tmp_path, "v1.2.3")
     return tmp_path
 
 
@@ -256,16 +260,7 @@ def temp_project_no_inherit(tmp_path):
     meta_dir.mkdir()
     (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_NO_INHERIT)
 
-    # Initialize git repo for version detection
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
-    subprocess.run(
-        ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True
-    )
-    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "tag", "v1.2.3"], cwd=tmp_path, check=True)
-
+    _init_git_repo(tmp_path, "v1.2.3")
     return tmp_path
 
 
@@ -282,16 +277,7 @@ def temp_project_wildcard(tmp_path):
     meta_dir.mkdir()
     (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_WILDCARD)
 
-    # Initialize git repo
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
-    subprocess.run(
-        ["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True
-    )
-    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", "Initial"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "tag", "v1.2.3"], cwd=tmp_path, check=True)
-
+    _init_git_repo(tmp_path, "v1.2.3")
     return tmp_path
 
 
