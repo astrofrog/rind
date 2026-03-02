@@ -194,6 +194,31 @@ core-path = "../core"
 name = "mypackage"
 """
 
+# Standalone metapackage (no core package)
+STANDALONE_PYPROJECT = """\
+[build-system]
+requires = ["rind"]
+build-backend = "rind"
+
+[project]
+name = "my-data-science-stack"
+version = "1.0.0"
+description = "A curated collection of data science packages"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Test Author", email = "test@example.com"}
+]
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "matplotlib>=3.7",
+]
+
+[project.optional-dependencies]
+ml = ["scikit-learn>=1.3", "tensorflow>=2.13"]
+"""
+
 
 def _init_git_repo(path, tag):
     """Initialize a git repo with a tag."""
@@ -318,4 +343,11 @@ def temp_project_dynamic_setuptools(tmp_path):
     meta_dir.mkdir()
     (meta_dir / "pyproject.toml").write_text(META_PYPROJECT_DYNAMIC_SETUPTOOLS)
 
+    return tmp_path
+
+
+@pytest.fixture
+def temp_project_standalone(tmp_path):
+    """Create a standalone metapackage (no core package)."""
+    (tmp_path / "pyproject.toml").write_text(STANDALONE_PYPROJECT)
     return tmp_path

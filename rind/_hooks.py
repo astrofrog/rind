@@ -19,53 +19,37 @@ from ._utils import (
 )
 
 
-def _is_sdist_mode():
-    """Check if we're building from an sdist (no core-path present)."""
+def _get_version_build_requires():
+    """
+    Get build requirements needed to determine the version.
+
+    Returns empty list for standalone mode (version in [project]).
+    For core-package mode, returns deps needed for version detection.
+    """
     pyproject = parse_pyproject()
     tool_config = pyproject.get("tool", {}).get("rind", {})
-    return not tool_config.get("core-path")
+
+    # Standalone mode - version is in [project], no deps needed
+    if not tool_config.get("core-path"):
+        return []
+
+    # Core-package mode - determine what we need for version detection
+    core_path = get_core_pyproject_path(tool_config)
+    core_pyproject = parse_pyproject(core_path)
+
+    from ._version_helpers import get_version_requires
+
+    return get_version_requires(core_pyproject)
 
 
 def get_requires_for_build_wheel(config_settings=None):
-    """Return build dependencies for wheel.
-
-    The dependencies depend on how the core package determines its version:
-    - Sdist mode (no core-path): no extra deps needed, version is in [project]
-    - Static version: no extra deps needed
-    - setuptools_scm/hatch-vcs: needs setuptools_scm
-    - Other backends: needs pyproject_hooks + core's build deps
-    """
-    # Check if we're building from an sdist
-    if _is_sdist_mode():
-        # Building from sdist - version is in [project], no deps needed
-        return []
-
-    # Building from source - determine what we need for version detection
-    pyproject = parse_pyproject()
-    tool_config = pyproject.get("tool", {}).get("rind", {})
-
-    core_path = get_core_pyproject_path(tool_config)
-    core_pyproject = parse_pyproject(core_path)
-
-    from ._version_helpers import get_version_requires
-
-    return get_version_requires(core_pyproject)
+    """Return build dependencies for wheel."""
+    return _get_version_build_requires()
 
 
 def get_requires_for_build_sdist(config_settings=None):
-    """Return build dependencies for sdist.
-
-    Same logic as wheel - we need to determine the version.
-    """
-    pyproject = parse_pyproject()
-    tool_config = pyproject.get("tool", {}).get("rind", {})
-
-    core_path = get_core_pyproject_path(tool_config)
-    core_pyproject = parse_pyproject(core_path)
-
-    from ._version_helpers import get_version_requires
-
-    return get_version_requires(core_pyproject)
+    """Return build dependencies for sdist."""
+    return _get_version_build_requires()
 
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
@@ -177,7 +161,7 @@ Tag: py3-none-any
     return wheel_path.name
 
 
-def _generate_resolved_pyproject(meta, original_pyproject):
+def _generate_resolved_pyproject(meta):
     """Generate a resolved pyproject.toml with all values hardcoded.
 
     This pyproject.toml can be used to build a wheel without access to
@@ -245,16 +229,13 @@ def build_sdist(sdist_directory, config_settings=None):
     """
     import tarfile
 
-    # Get the original pyproject for reference
-    original_pyproject = parse_pyproject()
-
     meta = build_metadata(config_settings)
     name = meta["name"]
     version = meta["version"]
     description = meta["metadata_fields"].get("description", "")
 
     # Generate resolved pyproject.toml
-    resolved_pyproject = _generate_resolved_pyproject(meta, original_pyproject)
+    resolved_pyproject = _generate_resolved_pyproject(meta)
 
     # sdist filename uses underscores per PEP 625
     sdist_name = f"{safe_name(name)}-{version}"

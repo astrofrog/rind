@@ -176,3 +176,50 @@ After release, users can choose their install:
 
 All options provide ``import mypackage`` because the actual code lives in
 ``mypackage-core`` but the package directory is named ``mypackage/``.
+
+Standalone Mode
+---------------
+
+rind also supports **standalone mode** for creating metapackages that don't
+wrap a core package. This is useful for creating curated dependency bundles.
+
+In standalone mode, you specify all metadata directly in ``[project]`` without
+a ``core-path``:
+
+.. code-block:: toml
+
+   [build-system]
+   requires = ["rind"]
+   build-backend = "rind"
+
+   [project]
+   name = "my-data-science-stack"
+   version = "1.0.0"
+   description = "A curated collection of data science packages"
+   requires-python = ">=3.9"
+   dependencies = [
+       "pandas>=2.0",
+       "numpy>=1.24",
+       "matplotlib>=3.7",
+   ]
+
+   [project.optional-dependencies]
+   ml = ["scikit-learn>=1.3", "tensorflow>=2.13"]
+
+Build with:
+
+.. code-block:: bash
+
+   $ python -m build .
+
+This creates a metapackage that bundles the listed dependencies. Users can then:
+
+.. code-block:: bash
+
+   $ pip install my-data-science-stack      # Get pandas, numpy, matplotlib
+   $ pip install my-data-science-stack[ml]  # Also get scikit-learn, tensorflow
+
+.. note::
+
+   In standalone mode, the version must be specified statically in ``[project]``.
+   Dynamic versioning requires a core package with ``core-path``.
