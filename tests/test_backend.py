@@ -640,18 +640,16 @@ class TestBuildSdist:
 
                 with tarfile.open(sdist_path, "r:gz") as tar:
                     names = tar.getnames()
-                    # Should contain pyproject.toml and cached build info
+                    # Should contain resolved pyproject.toml and PKG-INFO
                     assert any("pyproject.toml" in n for n in names)
-                    assert any(".rind_cache.json" in n for n in names)
                     assert any("PKG-INFO" in n for n in names)
         finally:
             os.chdir(original_cwd)
 
-    def test_sdist_build_info_cache(self, temp_project):
-        """Test that build info (version + metadata) is cached in sdist."""
-        import json
-
+    def test_sdist_resolved_pyproject(self, temp_project):
+        """Test that sdist contains resolved pyproject.toml with all values."""
         import rind
+        from rind._utils import parse_pyproject
 
         meta_dir = temp_project / "meta"
         original_cwd = os.getcwd()
@@ -661,19 +659,85 @@ class TestBuildSdist:
                 sdist_name = rind.build_sdist(sdist_dir)
                 sdist_path = Path(sdist_dir) / sdist_name
 
+                # Extract and parse the pyproject.toml
+                extract_dir = meta_dir / "extracted"
+                with tarfile.open(sdist_path, "r:gz") as tar:
+                    if sys.version_info >= (3, 12):
+                        tar.extractall(extract_dir, filter="data")
+                    else:
+                        tar.extractall(extract_dir)
+
+                extracted = list(extract_dir.iterdir())[0]
+                pyproject = parse_pyproject(extracted / "pyproject.toml")
+
+                # Check resolved values
+                assert pyproject["project"]["version"] == "1.2.3"
+                assert pyproject["project"]["name"] == "mypackage"
+                assert pyproject["project"]["requires-python"] == ">=3.9"
+                assert pyproject["tool"]["rind"]["core-package"] == "mypackage-core"
+                # Should have resolved dependencies
+                assert "mypackage-core[extra1,extra2]==1.2.3" in pyproject["project"]["dependencies"]
+                # Should NOT have core-path (that's only for source builds)
+                assert "core-path" not in pyproject["tool"]["rind"]
+        finally:
+            os.chdir(original_cwd)
+
+    def test_sdist_resolved_pyproject_full_metadata(self, temp_project_full_metadata):
+        """Test sdist with string license, keywords, and classifiers."""
+        import rind
+        from rind._utils import parse_pyproject
+
+        meta_dir = temp_project_full_metadata / "meta"
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            with tempfile.TemporaryDirectory() as sdist_dir:
+                sdist_name = rind.build_sdist(sdist_dir)
+                sdist_path = Path(sdist_dir) / sdist_name
+
+                # Extract and parse the pyproject.toml
+                extract_dir = meta_dir / "extracted"
+                with tarfile.open(sdist_path, "r:gz") as tar:
+                    if sys.version_info >= (3, 12):
+                        tar.extractall(extract_dir, filter="data")
+                    else:
+                        tar.extractall(extract_dir)
+
+                extracted = list(extract_dir.iterdir())[0]
+                pyproject = parse_pyproject(extracted / "pyproject.toml")
+
+                # String license (not dict)
+                assert pyproject["project"]["license"] == "MIT"
+                # Keywords as list
+                assert pyproject["project"]["keywords"] == ["test", "package"]
+                # Classifiers
+                assert "Development Status :: 4 - Beta" in pyproject["project"]["classifiers"]
+        finally:
+            os.chdir(original_cwd)
+
+    def test_sdist_resolved_pyproject_keywords_string(
+        self, temp_project_keywords_string
+    ):
+        """Test sdist with keywords as comma-separated string."""
+        import rind
+
+        meta_dir = temp_project_keywords_string / "meta"
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            with tempfile.TemporaryDirectory() as sdist_dir:
+                sdist_name = rind.build_sdist(sdist_dir)
+                sdist_path = Path(sdist_dir) / sdist_name
+
                 with tarfile.open(sdist_path, "r:gz") as tar:
                     for member in tar.getmembers():
-                        if ".rind_cache.json" in member.name:
+                        if "pyproject.toml" in member.name:
                             f = tar.extractfile(member)
-                            cached = json.load(f)
+                            content = f.read().decode("utf-8")
                             break
 
-                # Check version is cached
-                assert cached["version"] == "1.2.3"
-                # Check core project metadata is cached
-                assert cached["core_project"]["name"] == "mypackage-core"
-                assert cached["core_project"]["description"] == "My package core"
-                assert cached["core_project"]["requires-python"] == ">=3.9"
+                # Keywords as string (preserved as-is)
+                assert 'keywords = "test, package, example"' in content
         finally:
             os.chdir(original_cwd)
 
@@ -871,28 +935,60 @@ class TestHelperFunctions:
 class TestErrorHandling:
     """Tests for error handling."""
 
-    def test_missing_core_path(self, tmp_path):
-        """Test error when core-path is not specified."""
+    def test_sdist_mode_missing_version(self, tmp_path):
+        """Test error when in sdist mode but version is not in [project]."""
         from rind._metadata import build_metadata
 
         meta_dir = tmp_path / "meta"
         meta_dir.mkdir()
+        # No core-path means sdist mode, which requires version in [project]
         (meta_dir / "pyproject.toml").write_text("""\
 [build-system]
 requires = ["rind"]
 build-backend = "rind"
 
-[tool.rind]
+[project]
 name = "mypackage"
 """)
 
         original_cwd = os.getcwd()
         try:
             os.chdir(meta_dir)
-            with pytest.raises(ValueError, match="core-path is required"):
+            with pytest.raises(ValueError, match="Version must be specified"):
                 build_metadata()
         finally:
             os.chdir(original_cwd)
+
+    def test_sdist_mode_missing_name(self, tmp_path):
+        """Test error when in sdist mode but name is not in [project]."""
+        from rind._metadata import build_metadata
+
+        meta_dir = tmp_path / "meta"
+        meta_dir.mkdir()
+        # No core-path means sdist mode, which requires name in [project]
+        (meta_dir / "pyproject.toml").write_text("""\
+[build-system]
+requires = ["rind"]
+build-backend = "rind"
+
+[project]
+version = "1.0.0"
+""")
+
+        original_cwd = os.getcwd()
+        try:
+            os.chdir(meta_dir)
+            with pytest.raises(ValueError, match="Package name must be specified"):
+                build_metadata()
+        finally:
+            os.chdir(original_cwd)
+
+    def test_get_core_pyproject_path_missing(self, tmp_path):
+        """Test error when core-path is not specified."""
+        from rind._utils import get_core_pyproject_path
+
+        with pytest.raises(ValueError, match="core-path is required"):
+            get_core_pyproject_path({})
 
     def test_missing_name(self, tmp_path):
         """Test error when metapackage name is not specified."""

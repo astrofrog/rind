@@ -2,74 +2,42 @@
 Metadata building logic for rind.
 """
 
-import json
-from pathlib import Path
-
 from ._utils import get_core_pyproject_path, parse_pyproject
-
-# This file is included in the sdist to cache build info,
-# allowing wheels to be built from sdists without the parent pyproject.toml
-CACHED_BUILD_INFO_FILE = ".rind_cache.json"
-
-
-def load_cached_build_info():
-    """Load cached build info from sdist (if present).
-
-    Returns:
-        dict or None: Cached build info, or None if not present
-    """
-    cache_path = Path(CACHED_BUILD_INFO_FILE)
-    if cache_path.exists():
-        with open(cache_path) as f:
-            return json.load(f)
-    return None
-
-
-def save_build_info(version, core_project, dest_dir="."):
-    """Save build info to cache file for inclusion in sdist.
-
-    Args:
-        version: The determined version string
-        core_project: The core package's [project] section
-        dest_dir: Directory to save the cache file
-
-    Returns:
-        Path: Path to the cache file
-    """
-    cache_path = Path(dest_dir) / CACHED_BUILD_INFO_FILE
-    cache_data = {
-        "version": version,
-        "core_project": core_project,
-    }
-    with open(cache_path, "w") as f:
-        json.dump(cache_data, f, indent=2)
-    return cache_path
 
 
 def build_metadata(config_settings=None):
-    """Build and return all metadata needed for the package."""
+    """Build and return all metadata needed for the package.
+
+    This function operates in two modes:
+    1. Source mode: core-path is specified, compute everything from core package
+    2. Sdist mode: no core-path, read resolved values from [project] directly
+    """
     pyproject = parse_pyproject()
     tool_config = pyproject.get("tool", {}).get("rind", {})
     local_project = pyproject.get("project", {})
 
-    # Check for cached build info (present when building wheel from sdist)
-    cached = load_cached_build_info()
+    # Check if we're in source mode (core-path present) or sdist mode (no core-path)
+    core_path_config = tool_config.get("core-path")
 
-    if cached:
-        # Building from sdist - use cached info
-        version = cached["version"]
-        core_project = cached["core_project"]
+    if core_path_config:
+        # Source mode: compute everything from core package
+        return _build_metadata_from_source(pyproject, tool_config, local_project)
     else:
-        # Building from source - read core pyproject.toml
-        core_path = get_core_pyproject_path(tool_config)
-        core_pyproject = parse_pyproject(core_path)
-        core_project = core_pyproject.get("project", {})
-        core_dir = core_path.parent
+        # Sdist mode: read resolved values from [project]
+        return _build_metadata_from_resolved(pyproject, tool_config, local_project)
 
-        # Get version using the appropriate strategy for the core package
-        from ._version_helpers import get_version
 
-        version = get_version(core_pyproject, core_dir)
+def _build_metadata_from_source(pyproject, tool_config, local_project):
+    """Build metadata by reading from core package (source mode)."""
+    core_path = get_core_pyproject_path(tool_config)
+    core_pyproject = parse_pyproject(core_path)
+    core_project = core_pyproject.get("project", {})
+    core_dir = core_path.parent
+
+    # Get version using the appropriate strategy for the core package
+    from ._version_helpers import get_version
+
+    version = get_version(core_pyproject, core_dir)
 
     # Determine if we should inherit metadata (default: true)
     inherit_metadata = tool_config.get("inherit-metadata", True)
@@ -144,5 +112,45 @@ def build_metadata(config_settings=None):
         "dependencies": dependencies,
         "optional_deps": optional_deps,
         "core_package": core_package,
-        "core_project": core_project,
+    }
+
+
+def _build_metadata_from_resolved(pyproject, tool_config, local_project):
+    """Build metadata from resolved [project] values (sdist mode)."""
+    # In sdist mode, everything is already in [project]
+    name = local_project.get("name")
+    if not name:
+        raise ValueError("Package name must be specified in [project] name = ...")
+
+    version = local_project.get("version")
+    if not version:
+        raise ValueError("Version must be specified in [project] version = ...")
+
+    # Read dependencies directly
+    dependencies = local_project.get("dependencies", [])
+
+    # Read optional dependencies directly
+    optional_deps = local_project.get("optional-dependencies", {})
+
+    # Read metadata fields directly from [project]
+    metadata_fields = {
+        "description": local_project.get("description"),
+        "requires-python": local_project.get("requires-python"),
+        "license": local_project.get("license"),
+        "authors": local_project.get("authors"),
+        "urls": local_project.get("urls"),
+        "classifiers": local_project.get("classifiers"),
+        "keywords": local_project.get("keywords"),
+    }
+
+    # Core package name is stored in tool.rind for reference
+    core_package = tool_config.get("core-package")
+
+    return {
+        "name": name,
+        "version": version,
+        "metadata_fields": metadata_fields,
+        "dependencies": dependencies,
+        "optional_deps": optional_deps,
+        "core_package": core_package,
     }

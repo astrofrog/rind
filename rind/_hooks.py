@@ -8,12 +8,7 @@ import io
 import zipfile
 from pathlib import Path
 
-from ._metadata import (
-    CACHED_BUILD_INFO_FILE,
-    build_metadata,
-    load_cached_build_info,
-    save_build_info,
-)
+from ._metadata import build_metadata
 from ._utils import (
     get_core_pyproject_path,
     get_rind_version,
@@ -24,18 +19,25 @@ from ._utils import (
 )
 
 
+def _is_sdist_mode():
+    """Check if we're building from an sdist (no core-path present)."""
+    pyproject = parse_pyproject()
+    tool_config = pyproject.get("tool", {}).get("rind", {})
+    return not tool_config.get("core-path")
+
+
 def get_requires_for_build_wheel(config_settings=None):
     """Return build dependencies for wheel.
 
     The dependencies depend on how the core package determines its version:
+    - Sdist mode (no core-path): no extra deps needed, version is in [project]
     - Static version: no extra deps needed
     - setuptools_scm/hatch-vcs: needs setuptools_scm
     - Other backends: needs pyproject_hooks + core's build deps
     """
-    # Check for cached build info (building from sdist)
-    cached = load_cached_build_info()
-    if cached:
-        # Building from sdist - version is cached, no deps needed
+    # Check if we're building from an sdist
+    if _is_sdist_mode():
+        # Building from sdist - version is in [project], no deps needed
         return []
 
     # Building from source - determine what we need for version detection
@@ -175,49 +177,106 @@ Tag: py3-none-any
     return wheel_path.name
 
 
-def build_sdist(sdist_directory, config_settings=None):
-    """Build a minimal source distribution.
+def _generate_resolved_pyproject(meta, original_pyproject):
+    """Generate a resolved pyproject.toml with all values hardcoded.
 
-    The sdist contains the pyproject.toml and a cached copy of the build info
-    (version and core project metadata), so that wheels can be built from
-    sdists without access to the core pyproject.toml or git tags.
+    This pyproject.toml can be used to build a wheel without access to
+    the core package's pyproject.toml or git tags.
+    """
+    import tomli_w
+
+    fields = meta["metadata_fields"]
+
+    # Build the project section
+    project = {
+        "name": meta["name"],
+        "version": meta["version"],
+    }
+
+    if fields.get("description"):
+        project["description"] = fields["description"]
+
+    if fields.get("requires-python"):
+        project["requires-python"] = fields["requires-python"]
+
+    if fields.get("license"):
+        project["license"] = fields["license"]
+
+    if fields.get("authors"):
+        project["authors"] = fields["authors"]
+
+    if fields.get("keywords"):
+        project["keywords"] = fields["keywords"]
+
+    if fields.get("classifiers"):
+        project["classifiers"] = fields["classifiers"]
+
+    if meta["dependencies"]:
+        project["dependencies"] = meta["dependencies"]
+
+    if fields.get("urls"):
+        project["urls"] = fields["urls"]
+
+    if meta["optional_deps"]:
+        project["optional-dependencies"] = meta["optional_deps"]
+
+    # Build the full pyproject structure
+    pyproject = {
+        "build-system": {
+            "requires": ["rind"],
+            "build-backend": "rind",
+        },
+        "project": project,
+    }
+
+    # Add tool.rind section with core-package for reference
+    if meta.get("core_package"):
+        pyproject["tool"] = {"rind": {"core-package": meta["core_package"]}}
+
+    return tomli_w.dumps(pyproject)
+
+
+def build_sdist(sdist_directory, config_settings=None):
+    """Build a source distribution with resolved metadata.
+
+    The sdist contains a transformed pyproject.toml with all metadata
+    resolved and hardcoded, so that wheels can be built from sdists
+    without access to the core pyproject.toml or git tags.
     """
     import tarfile
+
+    # Get the original pyproject for reference
+    original_pyproject = parse_pyproject()
 
     meta = build_metadata(config_settings)
     name = meta["name"]
     version = meta["version"]
     description = meta["metadata_fields"].get("description", "")
-    core_project = meta["core_project"]
+
+    # Generate resolved pyproject.toml
+    resolved_pyproject = _generate_resolved_pyproject(meta, original_pyproject)
 
     # sdist filename uses underscores per PEP 625
     sdist_name = f"{safe_name(name)}-{version}"
     sdist_path = Path(sdist_directory) / f"{sdist_name}.tar.gz"
 
-    # Cache build info so wheel builds from sdist work
-    cache_file = save_build_info(version, core_project)
+    with tarfile.open(sdist_path, "w:gz") as tar:
+        # Include the resolved pyproject.toml
+        pyproject_bytes = resolved_pyproject.encode("utf-8")
+        info = tarfile.TarInfo(f"{sdist_name}/pyproject.toml")
+        info.size = len(pyproject_bytes)
+        tar.addfile(info, io.BytesIO(pyproject_bytes))
 
-    try:
-        with tarfile.open(sdist_path, "w:gz") as tar:
-            # Include the pyproject.toml
-            tar.add("pyproject.toml", f"{sdist_name}/pyproject.toml")
-
-            # Include cached build info
-            tar.add(str(cache_file), f"{sdist_name}/{CACHED_BUILD_INFO_FILE}")
-
-            # Include PKG-INFO (required by sdist spec)
-            pkg_info = f"""\
+        # Include PKG-INFO (required by sdist spec)
+        pkg_info = f"""\
 Metadata-Version: 2.1
 Name: {name}
 Version: {version}
 Summary: {description}
 """
-            pkg_info_bytes = pkg_info.encode("utf-8")
-            info = tarfile.TarInfo(f"{sdist_name}/PKG-INFO")
-            info.size = len(pkg_info_bytes)
-            tar.addfile(info, io.BytesIO(pkg_info_bytes))
-    finally:
-        # Clean up temporary cache file
-        cache_file.unlink(missing_ok=True)
+        pkg_info_bytes = pkg_info.encode("utf-8")
+        info = tarfile.TarInfo(f"{sdist_name}/PKG-INFO")
+        info.size = len(pkg_info_bytes)
+        tar.addfile(info, io.BytesIO(pkg_info_bytes))
 
     return sdist_path.name
