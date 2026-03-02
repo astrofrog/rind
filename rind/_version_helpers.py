@@ -39,11 +39,15 @@ def get_version_requires(core_pyproject):
     """
     Get build requirements needed to determine the version.
 
-    Args:
-        core_pyproject: Parsed core pyproject.toml dict
+    Parameters
+    ----------
+    core_pyproject : dict
+        Parsed core pyproject.toml dict.
 
-    Returns:
-        list: Build requirement strings
+    Returns
+    -------
+    list
+        Build requirement strings.
     """
     if _has_static_version(core_pyproject):
         return []
@@ -60,12 +64,17 @@ def get_version(core_pyproject, core_dir):
     """
     Get the version of the core package.
 
-    Args:
-        core_pyproject: Parsed core pyproject.toml dict
-        core_dir: Path to core package directory (where pyproject.toml lives)
+    Parameters
+    ----------
+    core_pyproject : dict
+        Parsed core pyproject.toml dict.
+    core_dir : Path
+        Path to core package directory (where pyproject.toml lives).
 
-    Returns:
-        str: Version string
+    Returns
+    -------
+    str
+        Version string.
     """
     # Strategy 1: Static version - just read it
     if _has_static_version(core_pyproject):
@@ -88,15 +97,22 @@ def _get_version_via_backend(core_dir, build_system):
     This is the most general approach - it works with any PEP 517 compliant
     backend by calling prepare_metadata_for_build_wheel and parsing the result.
 
-    Args:
-        core_dir: Path to core package directory
-        build_system: The build-system table from pyproject.toml
+    Parameters
+    ----------
+    core_dir : Path
+        Path to core package directory.
+    build_system : dict
+        The build-system table from pyproject.toml.
 
-    Returns:
-        str: Version string
+    Returns
+    -------
+    str
+        Version string.
 
-    Raises:
-        ValueError: If no build-backend is specified
+    Raises
+    ------
+    ValueError
+        If no build-backend is specified.
     """
     from email.parser import Parser
 
