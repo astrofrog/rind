@@ -1,9 +1,11 @@
 # Configuration file for the Sphinx documentation builder.
 
+from importlib.metadata import version as get_version
+
 project = "rind"
 copyright = "2024, Thomas Robitaille"
 author = "Thomas Robitaille"
-release = "0.1.0"
+release = get_version("rind")
 
 extensions = [
     "sphinx.ext.autodoc",

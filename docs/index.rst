@@ -115,15 +115,9 @@ Contents
 --------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    installation
    usage
    configuration
    how-it-works
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`search`
